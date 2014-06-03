@@ -16,6 +16,8 @@ namespace cace
 	public:
 		TimeManager();
 		virtual ~TimeManager();
+
+		unsigned long getDistributedTime();
 	};
 
 } /* namespace cace */

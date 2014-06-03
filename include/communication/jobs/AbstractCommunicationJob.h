@@ -8,14 +8,41 @@
 #ifndef ABSTRACTCOMMUNICATIONJOB_H_
 #define ABSTRACTCOMMUNICATIONJOB_H_
 
+#include <iostream>
+#include <memory>
+#include <vector>
+
+#include "../../cace.h"
+#include "../../variables/ConsensusVariable.h"
+#include "../CaceCommunication.h"
+
+
+using namespace std;
+
 namespace cace
 {
 
 	class AbstractCommunicationJob
 	{
 	public:
-		AbstractCommunicationJob();
+		AbstractCommunicationJob(string& name, shared_ptr<ConsensusVariable> variable, vector<int>& robotids, unsigned long lamportTime, Cace* cace);
 		virtual ~AbstractCommunicationJob();
+
+		virtual bool process() = 0;
+		virtual string toString() = 0;
+		virtual bool failed();
+
+
+		unsigned long lamportTime;
+		unsigned long startTime;
+		Cace* cace;
+		int attempts;
+		vector<int> expectedRobotIDs;
+		shared_ptr<ConsensusVariable> variable;
+		string name;
+		CaceCommunication* caceCommunication;
+
+
 	};
 
 } /* namespace cace */

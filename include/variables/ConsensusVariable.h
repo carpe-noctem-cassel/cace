@@ -67,7 +67,7 @@ namespace cace
 
 		short getType();
 		void setType(short t);
-		bool hasValue();
+		bool hasValue;
 		int getRobotID();
 		void setRobotID(int id);
 		unsigned long getArrivalTime();
@@ -83,7 +83,7 @@ namespace cace
 		void setAcceptStrategy(acceptStrategy aS);
 		t_acceptFunction acceptFunction;
 		void setAcceptFunction(t_acceptFunction func) {acceptFunction = func;};
-		vector<ConsensusVariable> proposals;
+		vector<ConsensusVariable*> proposals;
 
 		string valueAsString();
 		string toString();
@@ -95,13 +95,12 @@ namespace cace
 		bool lowestIDAcceptStrategy(Cace &c, vector<char>* commandedValue);
 		bool mostRecentAcceptStrategy(Cace &c, vector<char>* commandedValue);
 		bool electionAcceptStrategy(Cace &c, vector<char>* commandedValue);
-		bool setAcceptStrategy(Cace &c, vector<char>* commandedValue);
+		bool listAcceptStrategy(Cace &c, vector<char>* commandedValue);
 
 	protected:
 		vector<char> val;
 		string name;
 		short type;
-		bool hasVal;
 		int robotID;
 		unsigned long arrivalTime;
 		unsigned long decissionTime;

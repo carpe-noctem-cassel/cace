@@ -18,7 +18,7 @@ namespace cace
 	{
 		this->setAcceptStrategy(v.strategy);
 		this->decissionTime = v.decissionTime;
-		this->hasVal = v.hasVal;
+		this->hasValue = v.hasValue;
 		this->lamportAge = v.lamportAge;
 		this->name = string(v.name);
 		this->proposals = v.proposals;
@@ -31,7 +31,7 @@ namespace cace
 	ConsensusVariable::ConsensusVariable(string name, acceptStrategy strategy, unsigned long validityTime, int robotID,
 											unsigned long decissionTime, unsigned long lamportAge, short type)
 	{
-		this->hasVal = false;
+		this->hasValue = false;
 		this->name = name;
 		this->setAcceptStrategy(strategy);
 		this->validityTime = validityTime;
@@ -58,11 +58,11 @@ namespace cace
 	}
 	bool ConsensusVariable::valueEqual(vector<char>* cmp)
 	{
-		if (!hasVal && cmp == NULL)
+		if (!hasValue && cmp == NULL)
 			return true;
-		if (!hasVal && cmp != NULL)
+		if (!hasValue && cmp != NULL)
 			return false;
-		if (hasVal && cmp == NULL)
+		if (hasValue && cmp == NULL)
 			return false;
 		if (val.size() != cmp->size())
 			return false;
@@ -87,9 +87,9 @@ namespace cace
 		}
 
 		//If one robot didn't send an acknowledge -> Inconsistent
-		for (ConsensusVariable& v : proposals)
+		for (ConsensusVariable* v : proposals)
 		{
-			if (lamportAge > v.lamportAge)
+			if (lamportAge > v->lamportAge)
 				return false;
 		}
 		return true;
@@ -97,11 +97,11 @@ namespace cace
 
 	bool ConsensusVariable::checkConflict(Cace& c)
 	{
-		for (ConsensusVariable& cv : proposals)
+		for (ConsensusVariable* cv : proposals)
 		{
 			for (int& i : (*c.getActiveRobots()))
 			{
-				if (i == cv.robotID && !valueEqual(&cv.val))
+				if (i == cv->robotID && !valueEqual(&cv->val))
 				{
 					return true;
 				}
@@ -151,10 +151,7 @@ namespace cace
 	{
 		type = t;
 	}
-	bool ConsensusVariable::hasValue()
-	{
-		return hasVal;
-	}
+
 	int ConsensusVariable::getRobotID()
 	{
 		return robotID;
@@ -212,18 +209,18 @@ namespace cace
 			case acceptStrategy::ThreeWayHandShakeSet:
 			case acceptStrategy::TwoWayHandShakeSet:
 			case acceptStrategy::FireAndForgetSet:
-				//setAcceptFunction (setAcceptStrategy);
+				acceptFunction = &ConsensusVariable::listAcceptStrategy;
 				break;
 			case acceptStrategy::ThreeWayHandShakeLowestID:
 			case acceptStrategy::TwoWayHandShakeLowestID:
-				//setAcceptFunction (&&electionAcceptStrategy);
+				acceptFunction = &ConsensusVariable::lowestIDAcceptStrategy;
 				break;
 			case acceptStrategy::ThreeWayHandShakeMostRecent:
 			case acceptStrategy::TwoWayHandShakeMostRecent:
-				//setAcceptFunction (&&electionAcceptStrategy);
+				acceptFunction = &ConsensusVariable::mostRecentAcceptStrategy;
 				break;
 			default:
-				//setAcceptFunction (&&defaultConflictresolution);
+				acceptFunction = &ConsensusVariable::defaultAcceptStrategy;
 				break;
 
 		}
@@ -240,13 +237,13 @@ namespace cace
 
 		//if(!checkConflict(c)) return false;
 		ConsensusVariable* newest = this;
-		for (ConsensusVariable& cv : proposals)
+		for (ConsensusVariable* cv : proposals)
 		{
 			//if lamport time is newer or
-			if ((cv.lamportAge > newest->lamportAge)
-					|| (cv.lamportAge == newest->lamportAge && cv.robotID < newest->robotID))
+			if ((cv->lamportAge > newest->lamportAge)
+					|| (cv->lamportAge == newest->lamportAge && cv->robotID < newest->robotID))
 			{
-				newest = &cv;
+				newest = cv;
 			}
 		}
 		if (newest != this)
@@ -265,11 +262,11 @@ namespace cace
 
 		//if(!checkConflict(c)) return false;
 		ConsensusVariable* prio = this;
-		for (ConsensusVariable& cv : proposals)
+		for (ConsensusVariable* cv : proposals)
 		{
-			if (cv.hasVal && cv.robotID < prio->robotID)
+			if (cv->hasValue && cv->robotID < prio->robotID)
 			{
-				prio = &cv;
+				prio = cv;
 			}
 		}
 		if (prio != this)
@@ -288,11 +285,11 @@ namespace cace
 
 		//if(!checkConflict(c)) return false;
 		ConsensusVariable* newest = this;
-		for (ConsensusVariable& cv : proposals)
+		for (ConsensusVariable* cv : proposals)
 		{
-			if (cv.hasVal && cv.decissionTime > newest->decissionTime)
+			if (cv->hasValue && cv->decissionTime > newest->decissionTime)
 			{
-				newest = &cv;
+				newest = cv;
 			}
 		}
 		if (newest != this)
@@ -304,11 +301,11 @@ namespace cace
 	}
 	bool ConsensusVariable::electionAcceptStrategy(Cace &c, vector<char>* commandedValue)
 	{
-		if (!hasVal)
+		if (!hasValue)
 			setValue(std::numeric_limits<double>::min());
 		return true;
 	}
-	bool ConsensusVariable::setAcceptStrategy(Cace &c, vector<char>* commandedValue)
+	bool ConsensusVariable::listAcceptStrategy(Cace &c, vector<char>* commandedValue)
 	{
 		if (commandedValue != nullptr)
 		{
@@ -317,7 +314,7 @@ namespace cace
 
 		//if(!checkConflict(c)) return false;
 		ConsensusVariable* newest = this;
-		for (ConsensusVariable& c : proposals)
+		for (ConsensusVariable* c : proposals)
 		{
 			//TODO find new data
 		}
@@ -331,7 +328,7 @@ namespace cace
 
 	string ConsensusVariable::valueAsString()
 	{
-		if (!hasVal)
+		if (!hasValue)
 			return " ";
 
 		if (type == 1)
@@ -418,10 +415,10 @@ namespace cace
 			ret = name + "\t";
 			ret += valueAsString();
 			ret += "\t{";
-			for(ConsensusVariable& cv : proposals)
+			for(ConsensusVariable* cv : proposals)
 			{
-				ret += " (" + std::to_string(cv.robotID) + "-";
-				ret += ""+cv.valueAsString();
+				ret += " (" + std::to_string(cv->robotID) + "-";
+				ret += ""+cv->valueAsString();
 				ret += ")";
 			}
 			ret += " }";

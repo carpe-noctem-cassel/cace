@@ -10,7 +10,8 @@
 #include <iostream>
 #include <vector>
 
-#include "communication/caceCommunication.h"
+#include "communication/CaceCommunication.h"
+#include "timeManager/TimeManager.h"
 
 using namespace std;
 
@@ -30,12 +31,16 @@ namespace cace
 
 		vector<string> localScope;
 		vector<int> activeRobots;
+		CaceCommunication* communication;
 
 	public:
 		Cace* get();
-		void substituteCaceCommunication(caceCommunication cc);
+		void substituteCaceCommunication(CaceCommunication cc);
 		void setQuiet(string rosNodePrefix, short id);
 		void unsetQuiet(string rosNodePrefix, int id);
+		CaceCommunication* getCommunication();
+
+		TimeManager timeManager;
 
 		void step();
 		void run();

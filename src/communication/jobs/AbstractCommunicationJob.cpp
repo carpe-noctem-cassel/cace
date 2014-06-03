@@ -10,15 +10,25 @@
 namespace cace
 {
 
-	AbstractCommunicationJob::AbstractCommunicationJob()
+	AbstractCommunicationJob::AbstractCommunicationJob(string& name, shared_ptr<ConsensusVariable> variable, vector<int>& robotids, unsigned long lamportTime, Cace* cace)
 	{
-		// TODO Auto-generated constructor stub
-
+		this->cace = cace;
+		this->caceCommunication = cace->getCommunication();
+		this->name = name;
+		this->variable = variable;
+		this->expectedRobotIDs = robotids;
+		this->lamportTime = lamportTime;
+		this->startTime = cace->timeManager.getDistributedTime();
+		attempts = 0;
 	}
 
 	AbstractCommunicationJob::~AbstractCommunicationJob()
 	{
-		// TODO Auto-generated destructor stub
+	}
+
+	bool AbstractCommunicationJob::failed()
+	{
+		return false;
 	}
 
 } /* namespace cace */
