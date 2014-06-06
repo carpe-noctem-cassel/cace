@@ -12,8 +12,7 @@
 #include <memory>
 #include <vector>
 
-#include "../../cace.h"
-#include "../../variables/ConsensusVariable.h"
+#include "cace.h"
 #include "../CaceCommunication.h"
 
 
@@ -21,6 +20,8 @@ using namespace std;
 
 namespace cace
 {
+	class ConsensusVariable;
+	class Cace;
 
 	class AbstractCommunicationJob
 	{
@@ -30,7 +31,7 @@ namespace cace
 
 		virtual bool process() = 0;
 		virtual string toString() = 0;
-		virtual bool failed();
+		virtual bool failed() = 0;
 
 
 		unsigned long lamportTime;

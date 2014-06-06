@@ -44,7 +44,7 @@ namespace cace
 	void ConsensusVariable::update(ConsensusVariable& v)
 	{
 		this->name = string(v.getName());
-		this->val = vector<char>(v.val);
+		this->val = vector<uint8_t>(v.val);
 		this->arrivalTime = v.arrivalTime;
 		this->setAcceptStrategy(v.strategy);
 		if (v.validityTime != std::numeric_limits<long>::max())
@@ -56,7 +56,7 @@ namespace cace
 		if (v.type != 0)
 			this->type = v.type;
 	}
-	bool ConsensusVariable::valueEqual(vector<char>* cmp)
+	bool ConsensusVariable::valueEqual(vector<uint8_t>* cmp)
 	{
 		if (!hasValue && cmp == NULL)
 			return true;
@@ -124,12 +124,12 @@ namespace cace
 		return string("/") + name.substr(0, idx) + string("/");
 	}
 
-	vector<char> ConsensusVariable::getValue()
+	vector<uint8_t> ConsensusVariable::getValue()
 	{
 		return val;
 	}
 
-	void ConsensusVariable::setValue(vector<char> value)
+	void ConsensusVariable::setValue(vector<uint8_t> value)
 	{
 		val = value;
 	}
@@ -227,7 +227,7 @@ namespace cace
 		strategy = aS;
 	}
 
-	bool ConsensusVariable::defaultAcceptStrategy(Cace &c, vector<char>* commandedValue)
+	bool ConsensusVariable::defaultAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
 	{
 		//if we receive a unknown variable commandedValue != null
 		if (commandedValue != nullptr)
@@ -253,7 +253,7 @@ namespace cace
 		}
 		return false;
 	}
-	bool ConsensusVariable::lowestIDAcceptStrategy(Cace &c, vector<char>* commandedValue)
+	bool ConsensusVariable::lowestIDAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (commandedValue != nullptr)
 		{
@@ -276,7 +276,7 @@ namespace cace
 		}
 		return false;
 	}
-	bool ConsensusVariable::mostRecentAcceptStrategy(Cace &c, vector<char>* commandedValue)
+	bool ConsensusVariable::mostRecentAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (commandedValue != nullptr)
 		{
@@ -299,13 +299,13 @@ namespace cace
 		}
 		return false;
 	}
-	bool ConsensusVariable::electionAcceptStrategy(Cace &c, vector<char>* commandedValue)
+	bool ConsensusVariable::electionAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (!hasValue)
 			setValue(std::numeric_limits<double>::min());
 		return true;
 	}
-	bool ConsensusVariable::listAcceptStrategy(Cace &c, vector<char>* commandedValue)
+	bool ConsensusVariable::listAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (commandedValue != nullptr)
 		{

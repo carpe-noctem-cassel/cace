@@ -6,6 +6,7 @@
  */
 
 #include "communication/jobs/AbstractCommunicationJob.h"
+#include "variables/ConsensusVariable.h"
 
 namespace cace
 {
@@ -18,7 +19,7 @@ namespace cace
 		this->variable = variable;
 		this->expectedRobotIDs = robotids;
 		this->lamportTime = lamportTime;
-		this->startTime = cace->timeManager.getDistributedTime();
+		this->startTime = cace->timeManager->getDistributedTime();
 		attempts = 0;
 	}
 

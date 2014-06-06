@@ -8,15 +8,19 @@
 #define CACE_H_
 
 #include <iostream>
+#include <memory>
 #include <vector>
 
-#include "communication/CaceCommunication.h"
 #include "timeManager/TimeManager.h"
+#include "communication/CaceCommunication.h"
+#include "variableStore/CVariableStore.h"
 
 using namespace std;
 
 namespace cace
 {
+	class CVariableStore;
+
 	class Cace
 	{
 	private:
@@ -40,7 +44,8 @@ namespace cace
 		void unsetQuiet(string rosNodePrefix, int id);
 		CaceCommunication* getCommunication();
 
-		TimeManager timeManager;
+		TimeManager* timeManager;
+		CVariableStore* variableStore;
 
 		void step();
 		void run();

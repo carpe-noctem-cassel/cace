@@ -10,7 +10,7 @@
 namespace cace
 {
 
-	WriteAckJob::WriteAckJob()
+	WriteAckJob::WriteAckJob(string name, shared_ptr<ConsensusVariable> variable, vector<int> robotids, unsigned long lamportTime, Cace* cace, CaceCommandPtr cmd)
 	{
 		// TODO Auto-generated constructor stub
 

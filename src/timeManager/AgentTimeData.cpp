@@ -10,15 +10,18 @@
 namespace cace
 {
 
-	AgentTimeData::AgentTimeData()
+	AgentTimeData::AgentTimeData(ctime localTime, ctime distributedTime, ctime distributedMessageArrivalTime,
+									ctime localMessageArrivalTime, int robotID)
 	{
-		// TODO Auto-generated constructor stub
-
+		this->localTime = localTime;
+		this->distributedTime = distributedTime;
+		this->distributedMessageArrivalTime = distributedMessageArrivalTime;
+		this->robotID = robotID;
+		this->localMessageArrivalTime = localMessageArrivalTime;
 	}
 
 	AgentTimeData::~AgentTimeData()
 	{
-		// TODO Auto-generated destructor stub
 	}
 
 } /* namespace cace */

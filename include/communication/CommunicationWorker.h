@@ -22,6 +22,7 @@ using namespace std;
 
 namespace cace
 {
+	class AbstractCommunicationJob;
 
 	class CommunicationWorker
 	{

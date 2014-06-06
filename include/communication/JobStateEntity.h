@@ -8,14 +8,21 @@
 #ifndef JOBSTATEENTITY_H_
 #define JOBSTATEENTITY_H_
 
+#include "../timeManager/AgentTimeData.h"
+
 namespace cace
 {
 
 	class JobStateEntity
 	{
 	public:
-		JobStateEntity();
+		JobStateEntity(int robotID, int retrys, ctime lastSent);
 		virtual ~JobStateEntity();
+
+		int robotID;
+		ctime lastSent;
+		int retrys;
+
 	};
 
 } /* namespace cace */

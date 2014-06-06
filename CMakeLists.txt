@@ -86,9 +86,8 @@ find_package(catkin REQUIRED COMPONENTS roscpp message_generation)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}
-#  LIBRARIES cace
-  CATKIN_DEPENDS roscpp message_runtime
-#system_config
+  LIBRARIES cace system_config
+  CATKIN_DEPENDS roscpp message_runtime 
   DEPENDS program_options 
 )
 

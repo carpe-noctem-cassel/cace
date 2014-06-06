@@ -10,7 +10,7 @@
 namespace cace
 {
 
-	ShortAckJob::ShortAckJob()
+	ShortAckJob::ShortAckJob(string name, shared_ptr<ConsensusVariable> variable, vector<int> robotids, unsigned long lamportTime, Cace* cace, CaceAcknowledgePtr ack)
 	{
 		// TODO Auto-generated constructor stub
 

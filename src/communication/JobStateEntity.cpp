@@ -10,15 +10,15 @@
 namespace cace
 {
 
-	JobStateEntity::JobStateEntity()
+	JobStateEntity::JobStateEntity(int robotID, int retrys, ctime lastSent)
 	{
-		// TODO Auto-generated constructor stub
-
+		this->robotID = robotID;
+		this->retrys = retrys;
+		this->lastSent = lastSent;
 	}
 
 	JobStateEntity::~JobStateEntity()
 	{
-		// TODO Auto-generated destructor stub
 	}
 
 } /* namespace cace */

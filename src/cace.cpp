@@ -1,13 +1,19 @@
-
 #include <cace.h>
 
-namespace cace {
-
-Cace* Cace::get()
+namespace cace
 {
-	static Cace instance;
-	return &instance;
-}
+
+	Cace* Cace::get()
+	{
+		static Cace instance;
+		return &instance;
+	}
+
+	Cace::Cace()
+	{
+		timeManager = new TimeManager(communication);
+		variableStore = new CVariableStore(this);
+	}
 
 }
 int main()
