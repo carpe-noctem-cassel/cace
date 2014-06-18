@@ -5,17 +5,25 @@
  *      Author: endy
  */
 
-#include "communication/CaceCommunicationQuiet.h"
+#include <cace.h>
+#include <communication/CaceCommunicationQuiet.h>
+#include <Configuration.h>
+#include <SystemConfig.h>
+#include <timeManager/TimeManager.h>
 
 namespace cace
 {
-	CaceCommunicationQuiet::CaceCommunicationQuiet(CommunicationWorker* worker, string& nodePrefix, Cace* cace)
+	CaceCommunicationQuiet::CaceCommunicationQuiet(CommunicationWorker* worker, string& nodePrefix, Cace* cace,
+													short id)
 	{
 		init(worker, nodePrefix, cace);
-		if (ownID != 0)
-			this->ownID = ownID;
+		if (id != 0)
+			setOwnID(id);
 		else
 		{
+			supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
+
+			setOwnID((*sc)["Globals"]->tryGet<int>(-1, "Globals", "Team", sc->getHostname().c_str(), "ID", NULL));
 			//this->ownID = (short)SystemConfig.GetOwnRobotID();
 		}
 	}
@@ -24,8 +32,8 @@ namespace cace
 	{
 	}
 
-	void CaceCommunicationQuiet::sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t> value,
-													short receiver)
+	void CaceCommunicationQuiet::sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
+													short receiver, unsigned long lamportTime)
 	{
 	}
 
@@ -34,12 +42,12 @@ namespace cace
 	{
 	}
 
-	void CaceCommunicationQuiet::sendCaceAcknowledge(string name, vector<uint8_t> value, short messageID,
+	void CaceCommunicationQuiet::sendCaceAcknowledge(string& name, vector<uint8_t>& value, short messageID,
 														short receiver, short type, unsigned long lamportTime)
 	{
 	}
 
-	void CaceCommunicationQuiet::sendCaceShortAck(string name, short messageID, short receiver,
+	void CaceCommunicationQuiet::sendCaceShortAck(string& name, short messageID, short receiver,
 													unsigned long lamportTime)
 	{
 	}
@@ -50,13 +58,13 @@ namespace cace
 
 	void CaceCommunicationQuiet::handleCaceCommand(CaceCommandPtr cc)
 	{
-		cc->lamportTime = cace->timeManager->lamportTime+1;
+		cc->lamportTime = cace->timeManager->lamportTime + 1;
 		CaceCommunication::handleCaceCommand(cc);
 	}
 
 	void CaceCommunicationQuiet::handleCaceAcknowledge(CaceAcknowledgePtr ca)
 	{
-		ca->lamportTime = cace->timeManager->lamportTime+1;
+		ca->lamportTime = cace->timeManager->lamportTime + 1;
 		CaceCommunication::handleCaceAcknowledge(ca);
 	}
 

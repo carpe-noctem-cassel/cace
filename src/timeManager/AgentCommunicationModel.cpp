@@ -9,19 +9,22 @@
 
 namespace cace
 {
+	ctime AgentCommunicationModel::defaultDelay=0;
+	ctime AgentCommunicationModel::defaultDelayVariance=0;
 	const double AgentCommunicationModel::GSL_DBL_EPSILON = 2.2204460492503131e-16;
 
 	AgentCommunicationModel::AgentCommunicationModel(int robotID)
 	{
 		this->robotID = robotID;
-	}
-
-	AgentCommunicationModel::AgentCommunicationModel()
-	{
+		maxEntrys = 500;
 	}
 
 	AgentCommunicationModel::~AgentCommunicationModel()
 	{
+		for (AgentTimeData* atd : data)
+		{
+			delete atd;
+		}
 	}
 
 	void AgentCommunicationModel::addData(AgentTimeData* adt)
@@ -413,58 +416,58 @@ namespace cace
 	{
 		if (x > 0.0)
 		{
-		return gSLLambertW0e(x, val, err);
-	}
-	else if (x == 0.0)
-	{
-		val = 0.0;
-		err = 0.0;
-		return 1;
-	}
-	else
-	{
-		int MAX_ITERS = 32;
-		double one_over_E = 1.0 / exp(1);
-		double q = x + one_over_E;
-		double w;
-
-		if (q < 0.0)
-		{
-			/* As in the W0 branch above, return some reasonable answer anyway. */
-			val = -1.0;
-			err = sqrt(-q);
-			return 0;
+			return gSLLambertW0e(x, val, err);
 		}
-
-		if (x < -1.0e-6)
+		else if (x == 0.0)
 		{
-			/* Obtain initial approximation from series about q = 0,
-			 * as long as we're not very close to x = 0.
-			 * Use full series and try to bail out if q is too small,
-			 * since the Halley iteration has bad convergence properties
-			 * in finite arithmetic for q very small, because the
-			 * increment alternates and p is near zero.
-			 */
-			double r = -sqrt(q);
-			w = seriesEval(r);
-			if (q < 3.0e-3)
-			{
-				/* this approximation is good enough */
-				val = w;
-				err = 5.0 * GSL_DBL_EPSILON * abs(w);
-				return 1;
-			}
+			val = 0.0;
+			err = 0.0;
+			return 1;
 		}
 		else
 		{
-			/* Obtain initial approximation from asymptotic near zero. */
-			double L_1 = log(-x);
-			double L_2 = log(-L_1);
-			w = L_1 - L_2 + L_2 / L_1;
-		}
+			int MAX_ITERS = 32;
+			double one_over_E = 1.0 / exp(1);
+			double q = x + one_over_E;
+			double w;
 
-	return halleyIteration(x, w, MAX_ITERS, val, err);
-}
-}
+			if (q < 0.0)
+			{
+				/* As in the W0 branch above, return some reasonable answer anyway. */
+				val = -1.0;
+				err = sqrt(-q);
+				return 0;
+			}
+
+			if (x < -1.0e-6)
+			{
+				/* Obtain initial approximation from series about q = 0,
+				 * as long as we're not very close to x = 0.
+				 * Use full series and try to bail out if q is too small,
+				 * since the Halley iteration has bad convergence properties
+				 * in finite arithmetic for q very small, because the
+				 * increment alternates and p is near zero.
+				 */
+				double r = -sqrt(q);
+				w = seriesEval(r);
+				if (q < 3.0e-3)
+				{
+					/* this approximation is good enough */
+					val = w;
+					err = 5.0 * GSL_DBL_EPSILON * abs(w);
+					return 1;
+				}
+			}
+			else
+			{
+				/* Obtain initial approximation from asymptotic near zero. */
+				double L_1 = log(-x);
+				double L_2 = log(-L_1);
+				w = L_1 - L_2 + L_2 / L_1;
+			}
+
+			return halleyIteration(x, w, MAX_ITERS, val, err);
+		}
+	}
 
 } /* namespace cace */

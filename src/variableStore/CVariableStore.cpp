@@ -83,7 +83,8 @@ namespace cace
 		{
 			return store[name];
 		}
-		return nullptr;
+		shared_ptr<ConsensusVariable> np;
+		return np;
 	}
 
 	shared_ptr<ConsensusVariable> CVariableStore::getResponse(string& name)
@@ -132,8 +133,7 @@ namespace cace
 				{
 					vector<int> tmp;
 					tmp.push_back(id);
-					cout << "Not yet implemented worker append job required in CVariableStore" << endl;
-					//worker.AppendJob(new BelieveNotificationJob(var.Name, var, var.Value, tmp, lamportTime, cace));
+					cace->worker->appendJob(new BelieveNotificationJob(var->getName(), var, var->getValue(), tmp, lamportTime, cace));
 				}
 			}
 		}
@@ -177,7 +177,7 @@ namespace cace
 		return ret;
 	}
 
-	string CVariableStore::toStringNoNewLine(string& context)
+	string CVariableStore::toString(string& context)
 	{
 		lock_guard<std::mutex> lock(storeMutex);
 		string ret = "";

@@ -16,6 +16,9 @@ namespace cace
 
 	CommunicationWorker::~CommunicationWorker()
 	{
+		for(AbstractCommunicationJob* j : jobs) {
+			delete j;
+		}
 	}
 
 	void CommunicationWorker::appendJob(AbstractCommunicationJob* j)
@@ -99,7 +102,7 @@ namespace cace
 
 		return ret;
 	}
-	string CommunicationWorker::ToStringNoNewLine()
+	string CommunicationWorker::toStringNoNewLine()
 	{
 		list<AbstractCommunicationJob*>::iterator it;
 

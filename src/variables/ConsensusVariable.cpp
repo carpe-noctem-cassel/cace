@@ -5,13 +5,20 @@
  *      Author: endy
  */
 
-#include "variables/ConsensusVariable.h"
+#include <cace/CaceType.h>
+#include <variables/ConsensusVariable.h>
+#include <cstdint>
+#include <string>
 
 namespace cace
 {
 
 	ConsensusVariable::~ConsensusVariable()
 	{
+		for (ConsensusVariable* v : proposals)
+		{
+			delete v;
+		}
 	}
 
 	ConsensusVariable::ConsensusVariable(const ConsensusVariable& v)
@@ -58,14 +65,22 @@ namespace cace
 	}
 	bool ConsensusVariable::valueEqual(vector<uint8_t>* cmp)
 	{
-		if (!hasValue && cmp == NULL)
+		if (!hasValue && cmp == nullptr)
+		{
 			return true;
-		if (!hasValue && cmp != NULL)
+		}
+		if (!hasValue && cmp != nullptr)
+		{
 			return false;
-		if (hasValue && cmp == NULL)
+		}
+		if (hasValue && cmp == nullptr)
+		{
 			return false;
+		}
 		if (val.size() != cmp->size())
+		{
 			return false;
+		}
 		for (int i = 0; i < val.size(); i++)
 		{
 			if (val.at(i) != cmp->at(i))
@@ -99,7 +114,7 @@ namespace cace
 	{
 		for (ConsensusVariable* cv : proposals)
 		{
-			for (int& i : (*c.getActiveRobots()))
+			for (int i : (*c.getActiveRobots()))
 			{
 				if (i == cv->robotID && !valueEqual(&cv->val))
 				{
@@ -121,7 +136,7 @@ namespace cace
 		if (idx == string::npos)
 			return "/";
 
-		return string("/") + name.substr(0, idx) + string("/");
+		return name.substr(0, idx) + string("/");
 	}
 
 	vector<uint8_t> ConsensusVariable::getValue()
@@ -132,6 +147,7 @@ namespace cace
 	void ConsensusVariable::setValue(vector<uint8_t> value)
 	{
 		val = value;
+		hasValue = true;
 	}
 
 	string& ConsensusVariable::getName()
@@ -305,6 +321,12 @@ namespace cace
 			setValue(std::numeric_limits<double>::min());
 		return true;
 	}
+
+	void ConsensusVariable::acceptProposals(Cace& cace, vector<uint8_t>* value)
+	{
+		(this->*acceptFunction)(cace, value);
+	}
+
 	bool ConsensusVariable::listAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (commandedValue != nullptr)
@@ -415,38 +437,117 @@ namespace cace
 			ret = name + "\t";
 			ret += valueAsString();
 			ret += "\t{";
-			for(ConsensusVariable* cv : proposals)
+			for (ConsensusVariable* cv : proposals)
 			{
 				ret += " (" + std::to_string(cv->robotID) + "-";
-				ret += ""+cv->valueAsString();
+				ret += "" + cv->valueAsString();
 				ret += ")";
 			}
 			ret += " }";
 		}
-		ret += "\tAge: " + lamportAge;
-		ret += "\tType: " + type;
-		ret += "\tValidityTime: " + validityTime;
+		ret += "\tAge: " + to_string(lamportAge);
+		ret += "\tType: " + to_string(type);
+		ret += "\tValidityTime: " + to_string(validityTime);
 		return ret;
 	}
 
 	bool ConsensusVariable::getValue(double* out)
 	{
 		char* t = (char*)out;
-		if(val.size() < sizeof(double)) return false;
-		for(int i=0; i<sizeof(double); i++) {
+		if (val.size() < sizeof(double))
+			return false;
+		for (int i = 0; i < sizeof(double); i++)
+		{
 			*t = val.at(i);
 			t++;
 		}
+		return true;
 	}
 	void ConsensusVariable::setValue(double in)
 	{
-		char* it = (char*) &in;
+		char* it = (char*)&in;
 		val.clear();
 		val.reserve(sizeof(double));
-		for(int i=0; i<sizeof(double); i++) {
+		for (int i = 0; i < sizeof(double); i++)
+		{
 			val.push_back(*it);
 			it++;
 		}
+		hasValue = true;
+		type = CaceType::CDouble;
+	}
+
+	bool ConsensusVariable::getValue(int* out)
+	{
+		char* t = (char*)out;
+		if (val.size() < sizeof(int))
+			return false;
+		for (int i = 0; i < sizeof(int); i++)
+		{
+			*t = val.at(i);
+			t++;
+		}
+		return true;
+	}
+
+	void ConsensusVariable::setValue(int in)
+	{
+		char* it = (char*)&in;
+		val.clear();
+		val.reserve(sizeof(int));
+		for (int i = 0; i < sizeof(int); i++)
+		{
+			val.push_back(*it);
+			it++;
+		}
+		hasValue = true;
+		type = CaceType::CInt;
+	}
+
+	bool ConsensusVariable::getValue(string& out)
+	{
+		out.reserve(val.size());
+		for (int i = 0; i < val.size(); i++)
+		{
+			out.at(i) = val.at(i);
+		}
+		return true;
+	}
+
+	void ConsensusVariable::setValue(string* in)
+	{
+		val.clear();
+		val.reserve(in->size());
+		for (int i = 0; i < in->size(); i++)
+		{
+			val.at(i) = in->at(i);
+		}
+		type = CaceType::CString;
+	}
+
+	bool ConsensusVariable::getValue(vector<double>& out)
+	{
+	}
+
+	void ConsensusVariable::setValue(vector<double>* in)
+	{
+	}
+
+	bool ConsensusVariable::getValue(vector<int>& out)
+	{
+	}
+
+	void ConsensusVariable::setValue(vector<int>* in)
+	{
+	}
+
+	bool ConsensusVariable::getValue(vector<string>& out)
+	{
+	}
+
+	void ConsensusVariable::setValue(vector<string>* in)
+	{
 	}
 
 } /* namespace cace */
+

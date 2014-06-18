@@ -7,27 +7,29 @@
 
 #include "timeManager/TimeManager.h"
 #include "communication/CaceCommunication.h"
-//#include "SystemConfig.h"
+#include "SystemConfig.h"
 
 namespace cace
 {
 	unsigned long TimeManager::timeResolutionDevisor=1;
+	unsigned long TimeManager::timeMessageInterval=1;
 
 	TimeManager::TimeManager(CaceCommunication* com)
 	{
+		lastSent=0;
 		lamportTime = 1;
 		timeDiff = 0;
 		this->com = com;
-//#include "SystemConfig.h"
-		//supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
 
-		//timeMessageInterval = (*sc)["Cace"]->get<unsigned long>("Cace.TimeMessageInterval", NULL);
-		//maxResendTime = (*sc)["Cace"]->get<unsigned long>("Cace.MaxResendTime", NULL);
-		//minResendTime = (*sc)["Cace"]->get<unsigned long>("Cace.MinResendTime", NULL);
-		//resendArrivalProbability = (*sc)["Cace"]->get<double>("Cace.ResendArrivalPropability", NULL);
+		supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
 
-		//AgentCommunicationModel::defaultDelay = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelay", NULL);
-		//AgentCommunicationModel::defaultDelayVariance = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelayVariance", NULL);
+		timeMessageInterval = (*sc)["Cace"]->get<unsigned long>("Cace.TimeMessageInterval", NULL);
+		maxResendTime = (*sc)["Cace"]->get<unsigned long>("Cace.MaxResendTime", NULL);
+		minResendTime = (*sc)["Cace"]->get<unsigned long>("Cace.MinResendTime", NULL);
+		this->resendArrivalPropability = (*sc)["Cace"]->get<double>("Cace.ResendArrivalPropability", NULL);
+
+		AgentCommunicationModel::defaultDelay = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelay", NULL);
+		AgentCommunicationModel::defaultDelayVariance = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelayVariance", NULL);
 	}
 
 	TimeManager::~TimeManager()
@@ -116,7 +118,7 @@ namespace cace
 		map<int, AgentCommunicationModel>::iterator it;
 
 		lock_guard<std::mutex> lock(this->modelMutex);
-		cout << "please implement this! (TimeManager.cpp:AddTimeMessage)" << endl;
+		//cout << "please implement this! (TimeManager.cpp:AddTimeMessage)" << endl;
 		AgentTimeData* agt = new AgentTimeData(ct->localtime, ct->distributedTime, (ulong)((long)receivedTime + timeDiff),
 												receivedTime, ct->senderID);
 

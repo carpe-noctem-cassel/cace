@@ -41,8 +41,9 @@ namespace cace
 		void invalidate(TimeManager& timeManager);
 
 		string toString();
+		string toString(string& context);
 		string toStringNoNewLine();
-		string toStringNoNewLine(string& context);
+
 
 
 	protected:

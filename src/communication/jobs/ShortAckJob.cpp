@@ -5,20 +5,118 @@
  *      Author: endy
  */
 
-#include "communication/jobs/ShortAckJob.h"
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <cace.h>
+#include <communication/CaceCommunication.h>
+#include <communication/jobs/ShortAckJob.h>
+#include <CaceTypes.h>
+#include <variables/ConsensusVariable.h>
+#include <variableStore/CVariableStore.h>
+#include <limits>
+//#include <memory>
+#include <string>
+//#include <vector>
 
 namespace cace
 {
 
-	ShortAckJob::ShortAckJob(string name, shared_ptr<ConsensusVariable> variable, vector<int> robotids, unsigned long lamportTime, Cace* cace, CaceAcknowledgePtr ack)
+	ShortAckJob::ShortAckJob(string name, shared_ptr<ConsensusVariable> variable, vector<int> robotids,
+								unsigned long lamportTime, Cace* cace, CaceAcknowledgePtr ack) :
+			AbstractCommunicationJob(name, variable, robotids, lamportTime, cace)
 	{
-		// TODO Auto-generated constructor stub
+		this->ack = ack;
 
+		if (!cace->safeStepMode)
+		{
+			shared_ptr<ConsensusVariable> cv = doVariableUpdate();
+
+			if (cv->getAcceptStrategy() > acceptStrategy::TwoWayHandShake)
+			{
+				caceCommunication->sendCaceShortAck(cv->getName(), ack->msgID, ack->senderID);
+			}
+		}
 	}
 
 	ShortAckJob::~ShortAckJob()
 	{
-		// TODO Auto-generated destructor stub
+	}
+
+	string ShortAckJob::toString()
+	{
+		return "SAck " + ack->variableName + "=" + to_string(ack->value.size()) + "\tattempts: " + to_string(attempts)
+				+ "\tMsgID: " + to_string(ack->msgID);
+	}
+
+	bool ShortAckJob::process()
+	{
+		if (attempts == 0 && cace->safeStepMode)
+		{
+			shared_ptr<ConsensusVariable> cv = doVariableUpdate();
+			if (cv->getAcceptStrategy() > acceptStrategy::TwoWayHandShake)
+			{
+				caceCommunication->sendCaceShortAck(cv->getName(), ack->msgID, ack->senderID);
+			}
+		}
+		attempts++;
+
+		return true;
+	}
+
+	shared_ptr<ConsensusVariable> ShortAckJob::doVariableUpdate()
+	{
+		CVariableStore* store = cace->variableStore;
+		shared_ptr<ConsensusVariable> cv = store->getVariable(ack->variableName);
+		if (store->existsVariable(ack->variableName))
+		{
+			cv = store->getVariable(ack->variableName);
+
+			bool found = false;
+			for (ConsensusVariable* var : cv->proposals)
+			{
+				if (var->getRobotID() == ack->senderID)
+				{
+					found = true;
+					if (var->getLamportAge() <= ack->lamportTime)
+					{
+						var->setValue(ack->value);
+						var->setDecissionTime(std::numeric_limits<long>::max());
+						var->setValidityTime(std::numeric_limits<long>::max());
+						var->setLamportAge(ack->lamportTime);
+						//var->setAcceptStrategy((acceptStrategy)3);
+						var->setType(ack->type);
+					}
+				}
+			}
+			if (!found)
+			{
+				//add believe
+				ConsensusVariable* var = new ConsensusVariable(ack->variableName, cv->getAcceptStrategy(),
+																cv->getValidityTime(), ack->senderID,
+																cv->getDecissionTime(), ack->lamportTime, ack->type);
+				var->setValue(ack->value);
+				var->setRobotID(ack->senderID);
+				cv->proposals.push_back(var);
+			}
+			//cv->acceptProposals(*cace, nullptr);
+		}
+		else
+		{
+			//If we don't know anything: Accept Command
+			cv = make_shared<ConsensusVariable>(ack->variableName, acceptStrategy::ThreeWayHandShake,
+												std::numeric_limits<long>::max(), caceCommunication->getOwnID(),
+												std::numeric_limits<long>::max(), 0, ack->type);
+			ConsensusVariable* co = new ConsensusVariable(ack->variableName, acceptStrategy::ThreeWayHandShake,
+															std::numeric_limits<long>::max(), ack->senderID,
+															std::numeric_limits<long>::max(), ack->lamportTime,
+															ack->type);
+			co->setValue(ack->value);
+			cv->proposals.push_back(co);
+
+			cv->acceptProposals(*cace, &ack->value);
+			store->addVariable(cv);
+		}
+
+		return cv;
 	}
 
 } /* namespace cace */

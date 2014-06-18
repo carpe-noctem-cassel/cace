@@ -7,13 +7,30 @@
 #ifndef CACE_H_
 #define CACE_H_
 
-#include <iostream>
-#include <memory>
+//#include "caceSpace.h"
+//#include "communication/CaceCommunication.h"
+//#include "timeManager/TimeManager.h"
+//#include "variableStore/CVariableStore.h"
+//#include <iostream>
+//#include <memory>
+
+#include <ros/node_handle.h>
+#include <ros/timer.h>
+#include <string>
 #include <vector>
 
-#include "timeManager/TimeManager.h"
-#include "communication/CaceCommunication.h"
-#include "variableStore/CVariableStore.h"
+namespace cace
+{
+	class CaceCommunication;
+	class CaceSpace;
+	class CommunicationWorker;
+	class TimeManager;
+} /* namespace cace */
+namespace ros
+{
+	class Timer;
+	struct TimerEvent;
+} /* namespace ros */
 
 using namespace std;
 
@@ -23,44 +40,47 @@ namespace cace
 
 	class Cace
 	{
-	private:
-		Cace();
-		~Cace();
-		Cace(string prefix, int id);
-		Cace(string prefix, int id, bool quiet);
-
 	protected:
-		void init(string prefix, int id) {init(prefix, id, false);}
+		Cace(string prefix="", int id=0, bool quiet=false);
 		void init(string prefix, int id, bool quiet);
+
+		ros::NodeHandle node;
+
+	public:
+		~Cace();
+		CaceCommunication* communication;
+		static Cace* getEmulated(string prefix="", int id=0, bool quiet=false);
+		static Cace* get();
+		void destroy();
+		void substituteCaceCommunication(CaceCommunication* cc);
+		void setQuiet(string rosNodePrefix, short id);
+		void unsetQuiet(string rosNodePrefix, int id);
+
+		TimeManager* timeManager = nullptr;
+		CVariableStore* variableStore = nullptr;
+		CaceSpace* caceSpace = nullptr;
+		CommunicationWorker* worker = nullptr;
+		ros::Timer timer;
 
 		vector<string> localScope;
 		vector<int> activeRobots;
-		CaceCommunication* communication;
 
-	public:
-		Cace* get();
-		void substituteCaceCommunication(CaceCommunication cc);
-		void setQuiet(string rosNodePrefix, short id);
-		void unsetQuiet(string rosNodePrefix, int id);
-		CaceCommunication* getCommunication();
-
-		TimeManager* timeManager;
-		CVariableStore* variableStore;
-
-		void step();
+		void step(const ros::TimerEvent&);
 		void run();
 
 		vector<int>* getActiveRobots();
 
-		string& ownNetworkStatusString();
-		string& printMessageQueueStates();
-		string& printActiveRobots();
-		string& getGlobalScope();
+		bool safeStepMode;
+		bool quietMode;
+
+		string ownNetworkStatusString();
+		string printMessageQueueStates();
+		string printActiveRobots();
+		string getGlobalScope();
 		vector<string>& getLocalScope();
 		string getLocalScopeString();
 		void agentEngangement(int id, bool sendBeliveUpdates);
 		void agentDisengangement(int id);
-		string& toStringActiveRobots();
 	};
 }
 

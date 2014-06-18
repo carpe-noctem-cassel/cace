@@ -5,8 +5,11 @@
  *      Author: endy
  */
 
-#include "communication/jobs/AbstractCommunicationJob.h"
-#include "variables/ConsensusVariable.h"
+#include <cace.h>
+#include <communication/jobs/AbstractCommunicationJob.h>
+#include <timeManager/TimeManager.h>
+#include <variables/ConsensusVariable.h>
+#include <string>
 
 namespace cace
 {
@@ -14,7 +17,7 @@ namespace cace
 	AbstractCommunicationJob::AbstractCommunicationJob(string& name, shared_ptr<ConsensusVariable> variable, vector<int>& robotids, unsigned long lamportTime, Cace* cace)
 	{
 		this->cace = cace;
-		this->caceCommunication = cace->getCommunication();
+		this->caceCommunication = cace->communication;
 		this->name = name;
 		this->variable = variable;
 		this->expectedRobotIDs = robotids;

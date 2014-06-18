@@ -48,13 +48,15 @@ namespace cace
 
 		void init(CommunicationWorker* worker, string& nodePrefix, Cace* cace);
 
+		void step();
+
 		int getOwnID();
 		void setOwnID(int id);
 		bool isBlacklisted(int agentID);
 		void addToBlacklist(int agentID);
 		void removeFromBlackList(int agentID);
 		void cleanUp();
-		void ClearAllMessageLists();
+		void clearAllMessageLists();
 		void sendEvalString(string m);
 		virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name);
 		virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name, unsigned long lamportTime);
@@ -70,7 +72,7 @@ namespace cace
 										unsigned long lamportTime);
 		virtual void handleCaceWriteAck(CaceShortAckPtr ca);
 		virtual void handleCaceCommand(CaceCommandPtr cc);
-		list<CaceCommandPtr> GetCommands();
+		list<CaceCommandPtr> getCommands();
 		virtual void sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
 										short receiver);
 		virtual void sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
@@ -83,7 +85,7 @@ namespace cace
 		virtual void sendCaceAcknowledge(string& name, vector<uint8_t>& value, short messageID, short receiver,
 											short type, unsigned long lamportTime);
 		virtual void handleCaceBelieveNotification(CaceBelieveNotificationPtr cbn);
-		list<CaceBelieveNotificationPtr> GetCaceBelieveNotifications();
+		list<CaceBelieveNotificationPtr> getCaceBelieveNotifications();
 		virtual void sendCaceBelieveNotification(shared_ptr<ConsensusVariable> cv, short receiverID, short msgID);
 		virtual void sendCaceBelieveNotification(shared_ptr<ConsensusVariable> cv, short receiverID, short msgID,
 													unsigned long lamportTime);
@@ -100,6 +102,9 @@ namespace cace
 
 		set<int> agentBlacklist;
 
+		ros::NodeHandle* rosNode;
+		ros::AsyncSpinner* spinner;
+		int ownID;
 	protected:
 		CaceCommunication();
 
@@ -123,8 +128,6 @@ namespace cace
 		ros::Subscriber responseSubscriber;
 		ros::Publisher evalPublisher;
 
-		ros::NodeHandle* rosNode;
-
 		list<CaceCommandPtr> commands;
 		mutex cmdMutex;
 		list<CaceCommandPtr> writeCommands;
@@ -141,7 +144,6 @@ namespace cace
 		CommunicationWorker* worker;
 		Cace* cace;
 
-		int ownID;
 		mutex blacklistMutex;
 	};
 

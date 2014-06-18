@@ -15,9 +15,7 @@
 #include "cace.h"
 #include "CaceTypes.h"
 
-
 using namespace std;
-
 
 namespace cace
 {
@@ -30,7 +28,8 @@ namespace cace
 	{
 	public:
 		ConsensusVariable(const ConsensusVariable& v);
-		ConsensusVariable (string name, acceptStrategy strategy, unsigned long validityTime, int robotID, unsigned long decissionTime, unsigned long lamportAge, short type);
+		ConsensusVariable(string name, acceptStrategy strategy, unsigned long validityTime, int robotID,
+							unsigned long decissionTime, unsigned long lamportAge, short type);
 		virtual ~ConsensusVariable();
 
 		void update(ConsensusVariable& v);
@@ -40,7 +39,6 @@ namespace cace
 		bool isAgreed(Cace& c);
 		bool checkConflict(Cace& c);
 		string getScope();
-
 
 		vector<uint8_t> getValue();
 		void setValue(vector<uint8_t> value);
@@ -64,7 +62,12 @@ namespace cace
 		acceptStrategy getAcceptStrategy();
 		void setAcceptStrategy(acceptStrategy aS);
 		t_acceptFunction acceptFunction;
-		void setAcceptFunction(t_acceptFunction func) {acceptFunction = func;};
+		void acceptProposals(Cace& cace, vector<uint8_t>* value);
+		void setAcceptFunction(t_acceptFunction func)
+		{
+			acceptFunction = func;
+		}
+		;
 		vector<ConsensusVariable*> proposals;
 
 		string valueAsString();
@@ -72,6 +75,17 @@ namespace cace
 
 		bool getValue(double* out);
 		void setValue(double in);
+		bool getValue(int* out);
+		void setValue(int in);
+		bool getValue(string& out);
+		void setValue(string* in);
+
+		bool getValue(vector<double>& out);
+		void setValue(vector<double>* in);
+		bool getValue(vector<int>& out);
+		void setValue(vector<int>* in);
+		bool getValue(vector<string>& out);
+		void setValue(vector<string>* in);
 
 		bool defaultAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
 		bool lowestIDAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);

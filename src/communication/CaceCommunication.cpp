@@ -5,11 +5,23 @@
  *      Author: endy
  */
 
-#include "communication/CaceCommunication.h"
-#include "timeManager/TimeManager.h"
+#include <communication/CaceCommunication.h>
+#include <communication/jobs/ShortAckJob.h>
+#include <Configuration.h>
+#include <ros/node_handle.h>
+#include <ros/publisher.h>
+#include <ros/subscriber.h>
+#include <SystemConfig.h>
+#include <timeManager/TimeManager.h>
+#include <variableStore/CVariableStore.h>
+#include <cstdint>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace cace
 {
+
 	CaceCommunication::CaceCommunication()
 	{
 	}
@@ -21,7 +33,12 @@ namespace cace
 	CaceCommunication::CaceCommunication(CommunicationWorker* worker, string& nodePrefix, Cace* cace)
 	{
 		init(worker, nodePrefix, cace);
-		//setOwnID(SystemConfig.GetOwnRobotID());
+		supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
+
+		setOwnID((*sc)["Globals"]->tryGet<int>(-1,"Globals", "Team", sc->getHostname().c_str(), "ID", NULL));
+		if(ownID==-1) {
+			//cout << "ATTENTION!!! OwnID is set to -1!!! ROBOT ID is not in Globals.conf [Globals][Team]!!!" << endl;
+		}
 	}
 
 	void CaceCommunication::init(CommunicationWorker* worker, string& nodePrefix, Cace* cace)
@@ -34,6 +51,7 @@ namespace cace
 		//RosSharp.Init(nodePrefix+SystemConfig.RobotNodeName("Cace"), null);
 
 		rosNode = new ros::NodeHandle();
+		spinner = new ros::AsyncSpinner(4);
 
 		commandPublisher = rosNode->advertise<CaceCommand>("/Cace/CaceCommand", 10);
 		ackPublisher = rosNode->advertise<CaceAcknowledge>("/Cace/CaceAcknowledge", 10);
@@ -78,6 +96,11 @@ namespace cace
 		ownID = id;
 	}
 
+	void CaceCommunication::step()
+	{
+		ros::spinOnce();
+	}
+
 	bool CaceCommunication::isBlacklisted(int agentID)
 	{
 		lock_guard<std::mutex> lock(blacklistMutex);
@@ -108,6 +131,8 @@ namespace cace
 
 	void CaceCommunication::cleanUp()
 	{
+		spinner->stop();
+		delete spinner;
 		commandSubscriber.shutdown();
 		ackSubscriber.shutdown();
 		shortAckSubscriber.shutdown();
@@ -121,7 +146,7 @@ namespace cace
 		delete rosNode;
 	}
 
-	void CaceCommunication::ClearAllMessageLists()
+	void CaceCommunication::clearAllMessageLists()
 	{
 		{
 			lock_guard<std::mutex> lock(cmdMutex);
@@ -202,9 +227,11 @@ namespace cace
 
 	void CaceCommunication::handleCaceVariableRequest(CaceVariableRequestPtr cvr)
 	{
+		//cout << "---------------------------received request" << endl;
 		if (isBlacklisted(cvr->senderID))
 			return;
 		//0 is broadcast
+
 		if (cvr->receiverID == 0 || cvr->receiverID == ownID)
 		{
 			if (cace->variableStore->existsVariable(cvr->variableName))
@@ -319,7 +346,7 @@ namespace cace
 		}
 	}
 
-	list<CaceCommandPtr> CaceCommunication::GetCommands()
+	list<CaceCommandPtr> CaceCommunication::getCommands()
 	{
 		list<CaceCommandPtr> ret;
 		lock_guard<std::mutex> lock(cmdMutex);
@@ -458,7 +485,7 @@ namespace cace
 		}
 	}
 
-	list<CaceBelieveNotificationPtr> CaceCommunication::GetCaceBelieveNotifications()
+	list<CaceBelieveNotificationPtr> CaceCommunication::getCaceBelieveNotifications()
 	{
 		list<CaceBelieveNotificationPtr> ret;
 		lock_guard<std::mutex> lock(notMutex);

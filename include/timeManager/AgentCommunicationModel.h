@@ -25,8 +25,7 @@ namespace cace
 	class AgentCommunicationModel
 	{
 	public:
-		AgentCommunicationModel(int robotID);
-		AgentCommunicationModel();
+		AgentCommunicationModel(int robotID=0);
 		virtual ~AgentCommunicationModel();
 
 		list<AgentTimeData*> data;

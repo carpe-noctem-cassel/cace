@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp message_generation)
+find_package(catkin REQUIRED COMPONENTS roscpp system_config message_generation)
 
 
 ## System dependencies are found with CMake's conventions
@@ -105,24 +105,36 @@ file (GLOB _my_sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/communication/*.
  add_library(${PROJECT_NAME}
    ${_my_sources}
  )
-## Declare a cpp executable
-# add_executable(test_base ${_my_sources})
 
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(alica_engine_node alica_engine_generate_messages_cpp)
 
+add_dependencies(${PROJECT_NAME} ${catkin_LIBRARIES})
+
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}
-#   ${catkin_LIBRARIES} system_config
+   ${catkin_LIBRARIES}
  )
+ 
+ ## Declare a cpp executable
+add_executable(caceMonitor src/caceMonitor/caceMonitor.cpp)
+add_dependencies(caceMonitor ${catkin_LIBRARIES})
+target_link_libraries(caceMonitor ${catkin_LIBRARIES} ${PROJECT_NAME})
 
 #############
 ## Testing ##
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test test/caceTests.cpp)
+catkin_add_gtest(${PROJECT_NAME}-test test/caceTests.cpp test/jobTests.cpp test/systemTests.cpp test/applicationTests.cpp)
+
+if(TARGET ${PROJECT_NAME}-test)
+target_link_libraries(${PROJECT_NAME}-test
+${PROJECT_NAME}
+${catkin_LIBRARIES}
+)
+endif()
 
 # catkin_add_nosetests(test)

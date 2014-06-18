@@ -12,14 +12,13 @@
 #include <memory>
 #include <vector>
 
-#include "cace.h"
-#include "../CaceCommunication.h"
-
 
 using namespace std;
 
 namespace cace
 {
+	class cace;
+	class CaceCommunication;
 	class ConsensusVariable;
 	class Cace;
 
@@ -31,11 +30,12 @@ namespace cace
 
 		virtual bool process() = 0;
 		virtual string toString() = 0;
-		virtual bool failed() = 0;
+		virtual bool failed();
 
 
 		unsigned long lamportTime;
 		unsigned long startTime;
+		int maxRetrys;
 		Cace* cace;
 		int attempts;
 		vector<int> expectedRobotIDs;

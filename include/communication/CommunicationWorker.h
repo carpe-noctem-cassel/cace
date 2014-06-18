@@ -37,7 +37,7 @@ namespace cace
 		AbstractCommunicationJob* getNewestVariableJob(string name, acceptStrategy strategy);
 		void processJobs();
 		string toString();
-		string ToStringNoNewLine();
+		string toStringNoNewLine();
 	protected:
 		mutex jobMutex;
 		list<AbstractCommunicationJob*> jobs;
