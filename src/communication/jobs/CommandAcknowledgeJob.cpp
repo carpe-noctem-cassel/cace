@@ -160,7 +160,7 @@ namespace cace
 			cv = store->getVariable(command->variableName);
 
 			bool found = false;
-			for (ConsensusVariable* var : cv->proposals)
+			for (auto var : cv->proposals)
 			{
 				if (var->getRobotID() == command->senderID)
 				{
@@ -179,7 +179,7 @@ namespace cace
 			if (!found)
 			{
 				//add believe
-				ConsensusVariable* var = new ConsensusVariable(command->variableName, (acceptStrategy)command->level,
+				auto var = make_shared<ConsensusVariable>(command->variableName, (acceptStrategy)command->level,
 																command->validityTime, command->senderID,
 																command->decissionTime, command->lamportTime,
 																command->type);
@@ -195,7 +195,7 @@ namespace cace
 			cv = make_shared<ConsensusVariable>(command->variableName, (acceptStrategy)command->level,
 												command->validityTime, caceCommunication->getOwnID(),
 												command->decissionTime, command->lamportTime, command->type);
-			ConsensusVariable* co = new ConsensusVariable(command->variableName, (acceptStrategy)command->level,
+			auto co = make_shared<ConsensusVariable>(command->variableName, (acceptStrategy)command->level,
 															command->validityTime, command->senderID,
 															command->decissionTime, command->lamportTime,
 															command->type);

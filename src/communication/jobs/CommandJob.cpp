@@ -62,7 +62,7 @@ namespace cace
 		//Check for variable update (if something "newer" updated our variable we are not interessted in delivering our massge anymore!?)
 		for (int i = 0; i < expectedRobotIDs.size(); i++)
 		{
-			for (ConsensusVariable* var : variable->proposals)
+			for (auto var : variable->proposals)
 			{
 				if (var->getRobotID() == expectedRobotIDs.at(i))
 				{

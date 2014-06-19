@@ -8,14 +8,29 @@
 #ifndef ELECTION_H_
 #define ELECTION_H_
 
+#include <iostream>
+
+using namespace std;
+
+namespace cace
+{
+	class Cace;
+	class ConsensusVariable;
+} /* namespace cace */
+
 namespace cace
 {
 
-	class Election
+	class Election : public ConsensusVariable
 	{
 	public:
-		Election();
-		virtual ~Election();
+		Election(Cace* cace, string name, unsigned long validityTime, unsigned long decissionTime, unsigned long lamportAge);
+		Election(const ConsensusVariable& v);
+
+		int getWinner();
+		int getWinner(double& bet);
+
+		static string electionNamespace;
 	};
 
 } /* namespace cace */

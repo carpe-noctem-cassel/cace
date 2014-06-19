@@ -38,6 +38,8 @@ namespace cace
 
 		void distributeValue(string name, double value, acceptStrategy consensusLevel);
 		bool getVariableValue(string name, double* value);
+		void distributeValue(string name, int value, acceptStrategy consensusLevel);
+		bool getVariableValue(string name, int* value);
 
 		shared_ptr<ConsensusVariable> getVariable(string& name);
 		bool addVariable(shared_ptr<ConsensusVariable> var, bool distribute);

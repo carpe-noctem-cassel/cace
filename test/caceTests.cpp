@@ -419,15 +419,15 @@ TEST_F(CaceBasics, AgentCommunicationModel)
 
 TEST_F(CaceBasics, VariableTypesAndByteConversion)
 {
-	/*	int i = 10;
-	 int outInt = 0;*/
+	int i = 10;
+	int outInt = 0;
 	double d = 20.0;
 	double outDouble = 0;
 	double d2 = 30.0;
 	double outDouble2 = 0;
-	/*	string s = "name";
-	 string outString = "";
-	 List<string> sl = new List<string>();
+	string s = "name";
+	string outString = "";
+	/* List<string> sl = new List<string>();
 	 sl.Add("A");
 	 sl.Add("B");
 	 List<string> outsl = null;
@@ -449,17 +449,17 @@ TEST_F(CaceBasics, VariableTypesAndByteConversion)
 	EXPECT_EQ(v.getType(), CaceType::CDouble) << "Double Type";
 	EXPECT_EQ(d, outDouble) << "Double";
 
-	/*	v.SetValue(i);
-	 v.GetValue(out outInt);
-	 Assert.AreEqual(v.Type, RosCS.ConsensusEngine.CaceType.CInt, "Int Type");
-	 Assert.AreEqual(i, outInt, "Int");
+	v.setValue(i);
+	v.getValue(&outInt);
+	EXPECT_EQ(v.getType(), CaceType::CInt) << "Int Type";
+	EXPECT_EQ(i, outInt) << "Int";
 
-	 v.SetValue(s);
-	 v.GetValue(out outString);
-	 Assert.AreEqual(v.Type, RosCS.ConsensusEngine.CaceType.CString, "String Type");
-	 Assert.IsTrue(s.Equals(outString), "String");
+	v.setValue(&s);
+	v.getValue(outString);
+	EXPECT_EQ(v.getType(), CaceType::CString) << "String Type";
+	EXPECT_TRUE(s == (outString)) << "String";
 
-	 v.SetValue(sl);
+	/* v.SetValue(sl);
 	 v.GetValue(out outsl);
 	 Assert.AreEqual(v.Type, RosCS.ConsensusEngine.CaceType.CStringList, "StringList Type");
 	 Assert.IsTrue(sl[0].Equals(outsl[0]), "StringList");
@@ -496,12 +496,12 @@ TEST_F(CaceBasics, DefaultConflictResolutionOtherRobot)
 	v.setLamportAge(1);
 
 	//Lamport Age = 2
-	ConsensusVariable* v2 = new ConsensusVariable("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
-													std::numeric_limits<long>::max(), 2, 1000, 2, CaceType::CDouble);
+	auto v2 = make_shared<ConsensusVariable>("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
+												std::numeric_limits<long>::max(), 2, 1000, 2, CaceType::CDouble);
 	v2->setValue(2.0);
 	v2->setLamportAge(2);
-	ConsensusVariable* v3 = new ConsensusVariable("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
-													std::numeric_limits<long>::max(), 3, 1000, 1, CaceType::CDouble);
+	auto v3 = make_shared<ConsensusVariable>("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
+												std::numeric_limits<long>::max(), 3, 1000, 1, CaceType::CDouble);
 	v3->setValue(1.0);
 	v3->setLamportAge(1);
 
@@ -534,12 +534,12 @@ TEST_F(CaceBasics, DefaultConflictResolutionNoChangeAtDisengagedRobot)
 	v.setLamportAge(1);
 
 	//Lamport Age = 2
-	ConsensusVariable* v2 = new ConsensusVariable("A1", acceptStrategy::ThreeWayHandShake,
-													std::numeric_limits<long>::max(), 2, 1000, 2, CaceType::CDouble);
+	auto v2 = make_shared<ConsensusVariable>("A1", acceptStrategy::ThreeWayHandShake, std::numeric_limits<long>::max(),
+												2, 1000, 2, CaceType::CDouble);
 	v2->setValue(2.0);
 	v2->setLamportAge(2);
-	ConsensusVariable* v3 = new ConsensusVariable("A1", acceptStrategy::ThreeWayHandShake,
-													std::numeric_limits<long>::max(), 3, 1000, 1, CaceType::CDouble);
+	auto v3 = make_shared<ConsensusVariable>("A1", acceptStrategy::ThreeWayHandShake, std::numeric_limits<long>::max(),
+												3, 1000, 1, CaceType::CDouble);
 	v3->setValue(1.0);
 	v3->setLamportAge(1);
 
@@ -574,12 +574,12 @@ TEST_F(CaceBasics, DefaultConflictResolutionSelf)
 	v.setLamportAge(3);
 
 	//Lamport Age = 2
-	ConsensusVariable* v2 = new ConsensusVariable("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
-													std::numeric_limits<long>::max(), 2, 1000, 2, CaceType::CDouble);
+	auto v2 = make_shared<ConsensusVariable>("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
+												std::numeric_limits<long>::max(), 2, 1000, 2, CaceType::CDouble);
 	v2->setValue(2.0);
 	v2->setLamportAge(1);
-	ConsensusVariable* v3 = new ConsensusVariable("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
-													std::numeric_limits<long>::max(), 3, 1000, 1, CaceType::CDouble);
+	auto v3 = make_shared<ConsensusVariable>("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
+												std::numeric_limits<long>::max(), 3, 1000, 1, CaceType::CDouble);
 	v3->setValue(1.0);
 	v3->setLamportAge(1);
 

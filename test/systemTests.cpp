@@ -461,8 +461,8 @@ TEST_F(SystemTests, ElectionConflictHandling2)
 	ros::TimerEvent e;
 
 	string varName = "CH2";
-	int s = 1;
-	int s2 = 2;
+	double s = 1;
+	double s2 = 2;
 	cace[1]->timeManager->updateLamportTime(cace[0]->timeManager->lamportTime + 1000);
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::TwoWayHandShakeElection);
 	this_thread::sleep_for(chrono::milliseconds(1));
@@ -740,7 +740,7 @@ TEST_F(SystemTests, Notify)
 	ros::TimerEvent e;
 
 	string varName = "Notify";
-	int s = 1;
+	double s = 1;
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::ThreeWayHandShake);
 
 	this_thread::sleep_for(chrono::milliseconds(10));

@@ -119,7 +119,7 @@ namespace cace
 			if (currentScope.find(var->getScope()) == 0 && var->hasValue)
 			{ //localcontext.StartsWith(var.GetLocalContext())
 				unsigned long lastKnownUpdateTime = 0;
-				for (ConsensusVariable* c : var->proposals)
+				for (auto c : var->proposals)
 				{
 					if (c->getRobotID() == id)
 					{

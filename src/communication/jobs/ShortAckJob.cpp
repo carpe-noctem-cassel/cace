@@ -71,7 +71,7 @@ namespace cace
 			cv = store->getVariable(ack->variableName);
 
 			bool found = false;
-			for (ConsensusVariable* var : cv->proposals)
+			for (auto var : cv->proposals)
 			{
 				if (var->getRobotID() == ack->senderID)
 				{
@@ -90,7 +90,7 @@ namespace cace
 			if (!found)
 			{
 				//add believe
-				ConsensusVariable* var = new ConsensusVariable(ack->variableName, cv->getAcceptStrategy(),
+				auto var = make_shared<ConsensusVariable>(ack->variableName, cv->getAcceptStrategy(),
 																cv->getValidityTime(), ack->senderID,
 																cv->getDecissionTime(), ack->lamportTime, ack->type);
 				var->setValue(ack->value);
@@ -105,7 +105,7 @@ namespace cace
 			cv = make_shared<ConsensusVariable>(ack->variableName, acceptStrategy::ThreeWayHandShake,
 												std::numeric_limits<long>::max(), caceCommunication->getOwnID(),
 												std::numeric_limits<long>::max(), 0, ack->type);
-			ConsensusVariable* co = new ConsensusVariable(ack->variableName, acceptStrategy::ThreeWayHandShake,
+			auto co = make_shared<ConsensusVariable>(ack->variableName, acceptStrategy::ThreeWayHandShake,
 															std::numeric_limits<long>::max(), ack->senderID,
 															std::numeric_limits<long>::max(), ack->lamportTime,
 															ack->type);

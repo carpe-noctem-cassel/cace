@@ -68,7 +68,7 @@ namespace cace
 			acceptFunction = func;
 		}
 		;
-		vector<ConsensusVariable*> proposals;
+		vector<shared_ptr<ConsensusVariable>> proposals;
 
 		string valueAsString();
 		string toString();

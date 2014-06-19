@@ -139,6 +139,34 @@ namespace cace
 		return variable.operator bool();
 
 	}
+	void CaceSpace::distributeValue(string name, int value, acceptStrategy strategy)
+	{
+		char* p = (char*)&value;
+		vector<uint8_t> send;
+		for (int i = 0; i < sizeof(int); i++)
+		{
+			send.push_back(*p);
+			p++;
+		}
+		distributeValue(name, send, CaceType::CInt, strategy);
+	}
+
+	bool CaceSpace::getVariableValue(string name, int* value)
+	{
+		shared_ptr<ConsensusVariable> variable;
+		variable = store->getVariable(name);
+
+		if (variable.operator bool() && variable->hasValue)
+		{
+			variable->getValue(value);
+		}
+		else
+		{
+			value = nullptr;
+		}
+		return variable.operator bool();
+
+	}
 
 	shared_ptr<ConsensusVariable> CaceSpace::getVariable(string& name)
 	{
@@ -166,11 +194,13 @@ namespace cace
 			if (inStoreVar == var)
 			{
 				vector<int> all = *cace->getActiveRobots();
-				worker->appendJob(new CommandJob(var->getName(), var, var->getValue(), all, cace->timeManager->lamportTime, cace));
+				worker->appendJob(
+						new CommandJob(var->getName(), var, var->getValue(), all, cace->timeManager->lamportTime,
+										cace));
 			}
 			else
 			{
-				cout <<	"Cannot distribute Variables, when a variable with the same key already exists." << endl;
+				cout << "Cannot distribute Variables, when a variable with the same key already exists." << endl;
 			}
 		}
 		else
