@@ -105,7 +105,9 @@ file (GLOB _my_sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/communication/*.
  add_library(${PROJECT_NAME}
    ${_my_sources}
  )
-
+#set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage ")
+#set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage ")
+ 
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -117,7 +119,7 @@ add_dependencies(${PROJECT_NAME} ${catkin_LIBRARIES})
  target_link_libraries(${PROJECT_NAME}
    ${catkin_LIBRARIES}
  )
- 
+
  ## Declare a cpp executable
 add_executable(caceMonitor src/caceMonitor/caceMonitor.cpp)
 add_dependencies(caceMonitor ${catkin_LIBRARIES})
@@ -128,13 +130,15 @@ target_link_libraries(caceMonitor ${catkin_LIBRARIES} ${PROJECT_NAME})
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test test/caceTests.cpp test/jobTests.cpp test/systemTests.cpp test/applicationTests.cpp)
+catkin_add_gtest(${PROJECT_NAME}-test ${_my_sources} test/caceTests.cpp test/jobTests.cpp test/systemTests.cpp test/applicationTests.cpp test/serialization.cpp)
 
 if(TARGET ${PROJECT_NAME}-test)
 target_link_libraries(${PROJECT_NAME}-test
-${PROJECT_NAME}
+#${PROJECT_NAME}
 ${catkin_LIBRARIES}
 )
+set_target_properties(${PROJECT_NAME}-test PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage ")
+set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage ")
 endif()
 
 # catkin_add_nosetests(test)

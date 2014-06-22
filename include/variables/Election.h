@@ -9,13 +9,14 @@
 #define ELECTION_H_
 
 #include <iostream>
+#include "ConsensusVariable.h"
 
 using namespace std;
+
 
 namespace cace
 {
 	class Cace;
-	class ConsensusVariable;
 } /* namespace cace */
 
 namespace cace

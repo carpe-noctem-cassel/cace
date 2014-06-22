@@ -44,7 +44,7 @@ namespace cace
 		Cace(string prefix="", int id=0, bool quiet=false);
 		void init(string prefix, int id, bool quiet);
 
-		ros::NodeHandle node;
+		//ros::NodeHandle node;
 
 	public:
 		~Cace();

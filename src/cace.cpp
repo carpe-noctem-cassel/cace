@@ -6,12 +6,17 @@
 #include <communication/CommunicationWorker.h>
 #include <communication/jobs/BelieveAcknowledgeJob.h>
 #include <communication/jobs/CommandAcknowledgeJob.h>
-#include <ros/rate.h>
+#include <ros/duration.h>
+//#include <ros/rate.h>
+#include <ros/spinner.h>
 #include <timeManager/TimeManager.h>
 #include <variables/ConsensusVariable.h>
 #include <variableStore/CVariableStore.h>
+#include <iterator>
 #include <list>
 #include <memory>
+#include <sstream>
+#include <fstream>
 
 //#include <string>
 
@@ -28,7 +33,9 @@ namespace cace
 	{
 		//cout << "Killing Communication ..." << endl;
 		destroy();
+		delete communication;
 		//cout << "Deleting Variable Store ..." << endl;
+		delete caceSpace;
 		delete variableStore;
 		//cout << "Delteing worker ..." << endl;
 		delete worker;
@@ -37,13 +44,12 @@ namespace cace
 		//cout << "Cace Cleanup: Done" << endl;
 	}
 
-
 	Cace::Cace(string prefix, int id, bool quiet)
 	{
-		communication=nullptr;
-		variableStore=nullptr;
-		worker=nullptr;
-		timeManager=nullptr;
+		communication = nullptr;
+		variableStore = nullptr;
+		worker = nullptr;
+		timeManager = nullptr;
 		init(prefix, id, quiet);
 	}
 
@@ -85,6 +91,7 @@ namespace cace
 		communication->cleanUp();
 		delete communication;
 		communication = cc;
+		delete timeManager;
 		timeManager = new TimeManager(communication);
 	}
 
@@ -165,7 +172,7 @@ namespace cace
 
 	void Cace::run()
 	{
-		timer = communication->rosNode->createTimer(ros::Duration(0.033), &Cace::step, this, false);
+		timer = communication->rosNode.createTimer(ros::Duration(0.033), &Cace::step, this, false);
 		communication->spinner->start();
 	}
 
@@ -176,29 +183,30 @@ namespace cace
 
 	string Cace::ownNetworkStatusString()
 	{
-		return string("Not implemented");
-		/*		string allines = null;
-		 try {
-		 StringBuilder sb = new StringBuilder();
-		 using (StreamReader sr = new StreamReader("/proc/net/wireless"))
-		 {
-		 String line;
-		 line = sr.ReadLine();
-		 if(line!=null) line = sr.ReadLine();
-		 // Read and display lines from the file until the end of
-		 // the file is reached.
-		 while ((line = sr.ReadLine()) != null)
-		 {
-		 sb.AppendLine(line);
-		 }
-		 }
-		 allines = sb.ToString().Replace("\n","");
-		 } catch (Exception e)
-		 {
-		 //Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
-		 // face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
-		 return " wlan0: 0001   0  0  0        0      0      0    0     0        0 ";
-		 }*/
+		ifstream ifs("/proc/net/wireless");
+		string line;
+		//first two lines are just comments
+		if (!ifs.eof())
+		{
+			std::getline(ifs, line);
+		}
+		if (!ifs.eof())
+		{
+			std::getline(ifs, line);
+		}
+		// Read and display lines from the file until the end of
+		// the file is reached.
+		stringstream ss;
+		while (!ifs.eof())
+		{
+			std::getline(ifs, line);
+			ss << line << endl;
+		}
+
+//Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
+// face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
+//" wlan0: 0001   0  0  0        0      0      0    0     0        0 ";
+		return ss.str();
 	}
 
 	string Cace::printMessageQueueStates()

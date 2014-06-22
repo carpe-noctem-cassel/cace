@@ -455,105 +455,98 @@ namespace cace
 
 	bool ConsensusVariable::getValue(double* out)
 	{
-		char* t = (char*)out;
-		if (val.size() < sizeof(double))
-			return false;
-		for (int i = 0; i < sizeof(double); i++)
+		if (type == CaceType::CDouble)
 		{
-			*t = val.at(i);
-			t++;
+			*out = deserialize<double>(val);
 		}
-		return true;
+		return type == CaceType::CDouble;
 	}
 	void ConsensusVariable::setValue(double in)
 	{
-		char* it = (char*)&in;
 		val.clear();
-		val.reserve(sizeof(double));
-		for (int i = 0; i < sizeof(double); i++)
-		{
-			val.push_back(*it);
-			it++;
-		}
+		serialize(in, val);
 		hasValue = true;
 		type = CaceType::CDouble;
 	}
 
 	bool ConsensusVariable::getValue(int* out)
 	{
-		char* t = (char*)out;
-		if (val.size() < sizeof(int))
-			return false;
-		for (int i = 0; i < sizeof(int); i++)
+		if (type == CaceType::CInt)
 		{
-			*t = val.at(i);
-			t++;
+			*out = deserialize<int>(val);
 		}
-		return true;
+		return type == CaceType::CInt;
 	}
 
 	void ConsensusVariable::setValue(int in)
 	{
-		char* it = (char*)&in;
 		val.clear();
-		val.reserve(sizeof(int));
-		for (int i = 0; i < sizeof(int); i++)
-		{
-			val.push_back(*it);
-			it++;
-		}
+		serialize(in, val);
 		hasValue = true;
 		type = CaceType::CInt;
 	}
 
 	bool ConsensusVariable::getValue(string& out)
 	{
-		out.resize(val.size());
-		for (int i = 0; i < val.size(); i++)
+		if (type == CaceType::CString)
 		{
-			out.at(i) = val.at(i);
+			out = deserialize<string>(val);
 		}
-		return true;
+		return type == CaceType::CString;
 	}
 
 	void ConsensusVariable::setValue(string* in)
 	{
 		val.clear();
-		val.resize(in->length());
-		for (int i = 0; i < in->length(); i++)
-		{
-			val.at(i) = in->at(i);
-		}
+		serialize(*in, val);
 		type = CaceType::CString;
 	}
 
 	bool ConsensusVariable::getValue(vector<double>& out)
 	{
-		return false;
+		if (type == CaceType::CDoubleList)
+		{
+			out = deserialize<vector<double>>(val);
+		}
+		return type == CaceType::CDoubleList;
 	}
 
 	void ConsensusVariable::setValue(vector<double>* in)
 	{
+		val.clear();
+		serialize(*in, val);
 		type = CaceType::CDoubleList;
 	}
 
 	bool ConsensusVariable::getValue(vector<int>& out)
 	{
-		return false;
+		if (type == CaceType::CIntList)
+		{
+			out = deserialize<vector<int>>(val);
+		}
+		return type == CaceType::CIntList;
 	}
 
 	void ConsensusVariable::setValue(vector<int>* in)
 	{
+		val.clear();
+		serialize(*in, val);
 		type = CaceType::CIntList;
 	}
 
 	bool ConsensusVariable::getValue(vector<string>& out)
 	{
-		return false;
+		if (type == CaceType::CStringList)
+		{
+			out = deserialize<vector<string>>(val);
+		}
+		return type == CaceType::CStringList;
 	}
 
 	void ConsensusVariable::setValue(vector<string>* in)
 	{
+		val.clear();
+		serialize(*in, val);
 		type = CaceType::CStringList;
 	}
 

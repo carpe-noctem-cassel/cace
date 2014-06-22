@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <tuple>
 
 using namespace cace;
 
@@ -328,6 +329,11 @@ TEST_F(CaceBasics, LocalContext)
 	mycace->localScope.push_back("Test");
 	mycace->localScope.push_back("Namespace");
 	EXPECT_TRUE((mycace->getLocalScopeString() == string("/Test/Namespace/"))) << " should be /Test/Namespace/";
+
+	EXPECT_EQ(mycace->getGlobalScope(), string("254/Test/Namespace/")) << " should be 254/Test/Namespace/";
+
+	EXPECT_TRUE(mycace->ownNetworkStatusString().size() > 0)
+			<< "no networks statusstring available - you do not have wireless? check /proc/net/wireless";
 }
 
 TEST_F(CaceBasics, VariableContext)
@@ -427,20 +433,24 @@ TEST_F(CaceBasics, VariableTypesAndByteConversion)
 	double outDouble2 = 0;
 	string s = "name";
 	string outString = "";
-	/* List<string> sl = new List<string>();
-	 sl.Add("A");
-	 sl.Add("B");
-	 List<string> outsl = null;
 
-	 List<double> dl = new List<double>();
-	 dl.Add(20.0);
-	 dl.Add(30.0);
-	 List<double> outdl = null;
+	tuple<int, double, string, vector<int>> tpl = std::make_tuple(10, 10.0, "string", vector<int>{1,2});
+	tuple<int, double, string, vector<int>> outtpl;
 
-	 List<int> il = new List<int>();
-	 dl.Add(2);
-	 dl.Add(3);
-	 List<int> outil = null;*/
+	vector<string> sl;
+	sl.push_back("A");
+	sl.push_back("B");
+	vector<string> outsl;
+
+	vector<double> dl;
+	dl.push_back(20.0);
+	dl.push_back(30.0);
+	vector<double> outdl;
+
+	vector<int> il;
+	dl.push_back(2);
+	dl.push_back(3);
+	vector<int> outil;
 
 	ConsensusVariable v("Type", (acceptStrategy)acceptStrategy::ThreeWayHandShake, std::numeric_limits<long>::max(), 1,
 						1000, 1, CaceType::CInt);
@@ -459,29 +469,31 @@ TEST_F(CaceBasics, VariableTypesAndByteConversion)
 	EXPECT_EQ(v.getType(), CaceType::CString) << "String Type";
 	EXPECT_TRUE(s == (outString)) << "String";
 
-	/* v.SetValue(sl);
-	 v.GetValue(out outsl);
-	 Assert.AreEqual(v.Type, RosCS.ConsensusEngine.CaceType.CStringList, "StringList Type");
-	 Assert.IsTrue(sl[0].Equals(outsl[0]), "StringList");
-	 Assert.IsTrue(sl[1].Equals(outsl[1]), "StringList");
+	v.setValue(&sl);
+	v.getValue(outsl);
+	EXPECT_EQ(v.getType(), CaceType::CStringList) << "StringList Type";
+	EXPECT_EQ(sl[0], outsl[0]) << "StringList";
+	EXPECT_EQ(sl[1], outsl[1]) << "StringList";
 
-	 v.SetValue(il);
-	 v.GetValue(out outil);
-	 Assert.AreEqual(v.Type, RosCS.ConsensusEngine.CaceType.CIntList, "IntList Type");
-	 Assert.AreEqual(sl[0], (outsl[0]), "IntList");
-	 Assert.AreEqual(sl[1], (outsl[1]), "IntList");
+	v.setValue(&il);
+	v.getValue(outil);
+	EXPECT_EQ(v.getType(), CaceType::CIntList) << "IntList Type";
+	EXPECT_EQ(sl[0], outsl[0]) << "IntList";
+	EXPECT_EQ(sl[1], outsl[1]) << "IntList";
 
-	 v.SetValue(dl);
-	 v.GetValue(out outdl);
-	 Assert.AreEqual(v.Type, RosCS.ConsensusEngine.CaceType.CDoubleList, "DoubleList Type");
-	 Assert.AreEqual(dl[0], (outdl[0]), "DoubleList");
-	 Assert.AreEqual(dl[1], (outdl[1]), "DoubleList");*/
+	v.setValue(&dl);
+	v.getValue(outdl);
+	EXPECT_EQ(v.getType(), CaceType::CDoubleList) << "DoubleList Type";
+	EXPECT_EQ(dl.at(0), outdl.at(0)) << "DoubleList1";
+	EXPECT_EQ(dl.at(1), outdl.at(1)) << "DoubleList2";
 
-	/*v.setValue(d, d2);
-	 v.getValue(out outDouble, out outDouble2);
-	 Assert.AreEqual(v.Type, RosCS.ConsensusEngine.CaceType.CPoint2, "Point Type");
-	 Assert.AreEqual(d, outDouble, "Point");
-	 Assert.AreEqual(d2, outDouble2, "Point");*/
+	v.setValue(tpl);
+	v.getValue(outtpl);
+	EXPECT_EQ(v.getType(), CaceType::Custom) << "Custom Type";
+	EXPECT_EQ(get<0>(tpl), get<0>(outtpl)) << "tuple";
+	EXPECT_EQ(get<1>(tpl), get<1>(outtpl)) << "tuple";
+	EXPECT_EQ(get<2>(tpl), get<2>(outtpl)) << "tuple";
+	EXPECT_EQ(get<3>(tpl), get<3>(outtpl)) << "tuple";
 }
 
 TEST_F(CaceBasics, DefaultConflictResolutionOtherRobot)
@@ -681,6 +693,7 @@ int main(int argc, char **argv)
 
 	int ret = RUN_ALL_TESTS();
 	cout << "All tests Completed" << endl;
+	ros::shutdown();
 	return ret;
 }
 

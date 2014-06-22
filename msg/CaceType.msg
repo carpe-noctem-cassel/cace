@@ -1,4 +1,5 @@
 uint8 type
+uint8 Custom=254
 uint8 CDouble=1
 uint8 CInt=2
 uint8 CString=3

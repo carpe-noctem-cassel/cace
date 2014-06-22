@@ -28,10 +28,6 @@ namespace cace
 		}
 	}
 
-	CaceCommunicationQuiet::~CaceCommunicationQuiet()
-	{
-	}
-
 	void CaceCommunicationQuiet::sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
 													short receiver, unsigned long lamportTime)
 	{

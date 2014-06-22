@@ -12,8 +12,11 @@
 #include <vector>
 #include <limits>
 
+#include <cace/CaceType.h>
+
 #include "cace.h"
 #include "CaceTypes.h"
+#include "serializer/serialize.h"
 
 using namespace std;
 
@@ -86,6 +89,24 @@ namespace cace
 		void setValue(vector<int>* in);
 		bool getValue(vector<string>& out);
 		void setValue(vector<string>* in);
+
+		template<class T>
+		inline void setValue(const T& obj)
+		{
+			val.clear();
+			serialize(obj, val);
+			type = CaceType::Custom;
+		}
+
+		template<class T>
+		inline bool getValue(T& obj)
+		{
+			if (type == CaceType::Custom)
+			{
+				obj = deserialize<T>(val);
+			}
+			return type == CaceType::Custom;
+		}
 
 		bool defaultAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
 		bool lowestIDAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);

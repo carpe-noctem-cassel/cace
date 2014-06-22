@@ -102,7 +102,7 @@ namespace cace
 
 		set<int> agentBlacklist;
 
-		ros::NodeHandle* rosNode;
+		ros::NodeHandle rosNode;
 		ros::AsyncSpinner* spinner;
 		int ownID;
 	protected:

@@ -35,8 +35,9 @@ namespace cace
 		init(worker, nodePrefix, cace);
 		supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
 
-		setOwnID((*sc)["Globals"]->tryGet<int>(-1,"Globals", "Team", sc->getHostname().c_str(), "ID", NULL));
-		if(ownID==-1) {
+		setOwnID((*sc)["Globals"]->tryGet<int>(-1, "Globals", "Team", sc->getHostname().c_str(), "ID", NULL));
+		if (ownID == -1)
+		{
 			//cout << "ATTENTION!!! OwnID is set to -1!!! ROBOT ID is not in Globals.conf [Globals][Team]!!!" << endl;
 		}
 	}
@@ -50,32 +51,30 @@ namespace cace
 		//rosNode = new Node(nodePrefix+SystemConfig.RobotNodeName("Cace"));
 		//RosSharp.Init(nodePrefix+SystemConfig.RobotNodeName("Cace"), null);
 
-		rosNode = new ros::NodeHandle();
 		spinner = new ros::AsyncSpinner(4);
 
-		commandPublisher = rosNode->advertise<CaceCommand>("/Cace/CaceCommand", 10);
-		ackPublisher = rosNode->advertise<CaceAcknowledge>("/Cace/CaceAcknowledge", 10);
-		shortAckPublisher = rosNode->advertise<CaceShortAck>("/Cace/CaceShortAck", 10);
-		notificationPublisher = rosNode->advertise<CaceBelieveNotification>("/Cace/CaceBelieveNotification", 10);
-		timePublisher = rosNode->advertise<CaceTime>("/Cace/CaceTime", 10);
-		varRequestPublisher = rosNode->advertise<CaceVariableRequest>("/Cace/CaceVariableRequest", 10);
-		responsePublisher = rosNode->advertise<CaceCommand>("/Cace/CaceResponse", 10);
-		writePublisher = rosNode->advertise<CaceCommand>("/Cace/CaceWriteCommand", 10);
-		writeAckPublisher = rosNode->advertise<CaceShortAck>("/Cace/CaceWriteAck", 10);
-		evalPublisher = rosNode->advertise<std_msgs::String>("/Cace/Evaluation", 10);
+		commandPublisher = rosNode.advertise<CaceCommand>("/Cace/CaceCommand", 10);
+		ackPublisher = rosNode.advertise<CaceAcknowledge>("/Cace/CaceAcknowledge", 10);
+		shortAckPublisher = rosNode.advertise<CaceShortAck>("/Cace/CaceShortAck", 10);
+		notificationPublisher = rosNode.advertise<CaceBelieveNotification>("/Cace/CaceBelieveNotification", 10);
+		timePublisher = rosNode.advertise<CaceTime>("/Cace/CaceTime", 10);
+		varRequestPublisher = rosNode.advertise<CaceVariableRequest>("/Cace/CaceVariableRequest", 10);
+		responsePublisher = rosNode.advertise<CaceCommand>("/Cace/CaceResponse", 10);
+		writePublisher = rosNode.advertise<CaceCommand>("/Cace/CaceWriteCommand", 10);
+		writeAckPublisher = rosNode.advertise<CaceShortAck>("/Cace/CaceWriteAck", 10);
+		evalPublisher = rosNode.advertise<std_msgs::String>("/Cace/Evaluation", 10);
 
-		commandSubscriber = rosNode->subscribe("/Cace/CaceCommand", 10, &CaceCommunication::handleCaceCommand, this);
-		ackSubscriber = rosNode->subscribe("/Cace/CaceAcknowledge", 10, &CaceCommunication::handleCaceAcknowledge,
-											this);
-		shortAckSubscriber = rosNode->subscribe("/Cace/CaceShortAck", 10, &CaceCommunication::handleCaceShortAck, this);
-		notificationSubscriber = rosNode->subscribe("/Cace/CaceBelieveNotification", 10,
+		commandSubscriber = rosNode.subscribe("/Cace/CaceCommand", 10, &CaceCommunication::handleCaceCommand, this);
+		ackSubscriber = rosNode.subscribe("/Cace/CaceAcknowledge", 10, &CaceCommunication::handleCaceAcknowledge, this);
+		shortAckSubscriber = rosNode.subscribe("/Cace/CaceShortAck", 10, &CaceCommunication::handleCaceShortAck, this);
+		notificationSubscriber = rosNode.subscribe("/Cace/CaceBelieveNotification", 10,
 													&CaceCommunication::handleCaceBelieveNotification, this);
-		timeSubscriber = rosNode->subscribe("/Cace/CaceTime", 10, &CaceCommunication::handleCaceTime, this);
-		varRequestSubscriber = rosNode->subscribe("/Cace/CaceVariableRequest", 10,
+		timeSubscriber = rosNode.subscribe("/Cace/CaceTime", 10, &CaceCommunication::handleCaceTime, this);
+		varRequestSubscriber = rosNode.subscribe("/Cace/CaceVariableRequest", 10,
 													&CaceCommunication::handleCaceVariableRequest, this);
-		writeSubscriber = rosNode->subscribe("/Cace/CaceWriteCommand", 10, &CaceCommunication::handleCaceWrite, this);
-		writeAckSubscriber = rosNode->subscribe("/Cace/CaceWriteAck", 10, &CaceCommunication::handleCaceWriteAck, this);
-		responseSubscriber = rosNode->subscribe("/Cace/CaceResponse", 10, &CaceCommunication::handleCaceResponse, this);
+		writeSubscriber = rosNode.subscribe("/Cace/CaceWriteCommand", 10, &CaceCommunication::handleCaceWrite, this);
+		writeAckSubscriber = rosNode.subscribe("/Cace/CaceWriteAck", 10, &CaceCommunication::handleCaceWriteAck, this);
+		responseSubscriber = rosNode.subscribe("/Cace/CaceResponse", 10, &CaceCommunication::handleCaceResponse, this);
 	}
 
 	int CaceCommunication::getOwnID()
@@ -142,8 +141,7 @@ namespace cace
 		writeSubscriber.shutdown();
 		writeAckSubscriber.shutdown();
 		responseSubscriber.shutdown();
-
-		delete rosNode;
+		rosNode.shutdown();
 	}
 
 	void CaceCommunication::clearAllMessageLists()
@@ -629,6 +627,7 @@ namespace cace
 		lock_guard<std::mutex> lock2(ackMutex);
 		lock_guard<std::mutex> lock3(sackMutex);
 		lock_guard<std::mutex> lock4(notMutex);
-		return "Commands: " + to_string(commands.size()) + "\tAcks: " + to_string(acknowledges.size()) + "\tShortAcks: " + to_string(shortAcks.size()) + "\tNotifications: " + to_string(believeNotifications.size());
+		return "Commands: " + to_string(commands.size()) + "\tAcks: " + to_string(acknowledges.size()) + "\tShortAcks: "
+				+ to_string(shortAcks.size()) + "\tNotifications: " + to_string(believeNotifications.size());
 	}
 } /* namespace cace */

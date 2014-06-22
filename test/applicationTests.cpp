@@ -1,4 +1,5 @@
 #include <variables/CaceMutex.h>
+#include <variables/Election.h>
 #include <caceSpace.h>
 #include <communication/CaceCommunication.h>
 #include <timeManager/TimeManager.h>
@@ -115,8 +116,9 @@ TEST_F(ApplicationTests, MutexStrictAlone)
 {
 	cace[0]->activeRobots.clear();
 	cace[0]->variableStore->deleteAllVariables();
-	CaceMutex* m = new CaceMutex(cace[0], "simple", std::numeric_limits<long>::max(), cace[0]->timeManager->getDistributedTime(),
-				cace[0]->timeManager->lamportTime, true);
+	CaceMutex* m = new CaceMutex(cace[0], "simple", std::numeric_limits<long>::max(),
+									cace[0]->timeManager->getDistributedTime(), cace[0]->timeManager->lamportTime,
+									true);
 	shared_ptr<ConsensusVariable> mutexptr(m);
 	cace[0]->caceSpace->addVariable(mutexptr, false);
 	EXPECT_TRUE(m->getName()==(CaceMutex::mutexNamespace + string("simple"))) << "Name and Context";
@@ -139,8 +141,9 @@ TEST_F(ApplicationTests, MutexStrictNotAlone)
 	agents.push_back(101);
 
 	cace[0]->variableStore->deleteAllVariables();
-	CaceMutex* m= new CaceMutex(cace[0], "simple3", std::numeric_limits<long>::max(), cace[0]->timeManager->getDistributedTime(),
-				cace[0]->timeManager->lamportTime, true);
+	CaceMutex* m = new CaceMutex(cace[0], "simple3", std::numeric_limits<long>::max(),
+									cace[0]->timeManager->getDistributedTime(), cace[0]->timeManager->lamportTime,
+									true);
 	shared_ptr<ConsensusVariable> mutexptr(m);
 	cace[0]->caceSpace->addVariable(mutexptr, false);
 	EXPECT_TRUE(m->isFree(agents)) << "Before";
@@ -184,8 +187,9 @@ TEST_F(ApplicationTests, MutexNonStrictNotAlone)
 	agents.push_back(103);
 
 	cace[0]->variableStore->deleteAllVariables();
-	CaceMutex* m = new CaceMutex(cace[0], "simpleNonStrict", numeric_limits<long>::max(), cace[0]->timeManager->getDistributedTime(),
-				cace[0]->timeManager->lamportTime, false);
+	CaceMutex* m = new CaceMutex(cace[0], "simpleNonStrict", numeric_limits<long>::max(),
+									cace[0]->timeManager->getDistributedTime(), cace[0]->timeManager->lamportTime,
+									false);
 	shared_ptr<ConsensusVariable> mutexptr(m);
 	cace[0]->caceSpace->addVariable(mutexptr, false);
 	EXPECT_TRUE(m->isFree(agents)) << "Before";
@@ -224,15 +228,85 @@ TEST_F(ApplicationTests, MutexNonStrictAlone)
 {
 	cace[0]->activeRobots.clear();
 	cace[0]->variableStore->deleteAllVariables();
-	CaceMutex* m = new CaceMutex(cace[0], "simple2", numeric_limits<long>::max(), cace[0]->timeManager->getDistributedTime(), cace[0]->timeManager->lamportTime, false);
+	CaceMutex* m = new CaceMutex(cace[0], "simple2", numeric_limits<long>::max(),
+									cace[0]->timeManager->getDistributedTime(), cace[0]->timeManager->lamportTime,
+									false);
 	shared_ptr<ConsensusVariable> mutexptr(m);
 	cace[0]->caceSpace->addVariable(mutexptr, false);
 
-	EXPECT_TRUE(m->isFree(cace[0]->activeRobots))<< "Before";
+	EXPECT_TRUE(m->isFree(cace[0]->activeRobots)) << "Before";
 	m->p();
 
 	EXPECT_FALSE(m->isFree(cace[0]->activeRobots)) << "Freeness After P";
 	EXPECT_TRUE(m->isOwner(cace[0]->communication->getOwnID(), cace[0]->activeRobots)) << "IsOwner";
 	EXPECT_TRUE(m->v()) << "V";
 	EXPECT_TRUE(m->isFree(cace[0]->activeRobots)) << "After V";
+}
+
+TEST_F(ApplicationTests, Election)
+{
+	cace[0]->activeRobots.clear();
+	cace[0]->worker->clearJobs();
+	cace[0]->variableStore->deleteAllVariables();
+	cace[0]->agentEngangement(1, false);
+	cace[0]->agentEngangement(2, false);
+	cace[1]->activeRobots.clear();
+	cace[1]->worker->clearJobs();
+	cace[1]->variableStore->deleteAllVariables();
+	cace[1]->agentEngangement(1, false);
+	cace[1]->agentEngangement(2, false);
+
+	string Name = "election1";
+	string varName = "e/" + Name;
+	double s = 2;
+	Election* el = new Election(cace[0], Name, numeric_limits<long>::max(), cace[0]->timeManager->getDistributedTime(),
+								cace[0]->timeManager->lamportTime);
+	el->setValue(s);
+	shared_ptr<ConsensusVariable> mutexptr(el);
+	cace[0]->caceSpace->distributeVariable(mutexptr);
+
+	ros::TimerEvent e;
+	for (int i = 0; i < 10; i++)
+	{
+		this_thread::sleep_for(chrono::milliseconds(10));
+		cace[0]->step(e);
+		cace[1]->step(e);
+	}
+	auto v1 = cace[0]->caceSpace->getVariable(varName);
+	auto v2 = cace[1]->caceSpace->getVariable(varName);
+	double tmp = 0;
+
+	EXPECT_TRUE(v1.operator bool()) << "1: Dont know Variable\n" + cace[0]->variableStore->toString();
+	EXPECT_TRUE(v2.operator bool()) << "2: Dont know Variable\n" + cace[0]->variableStore->toString();
+	v2->getValue(&tmp);
+	EXPECT_DOUBLE_EQ(numeric_limits<double>::min(), tmp) << "v2 should have int.MinValue";
+	EXPECT_TRUE(v1->hasValue) << "1 v1.HasValue\n" << v1->toString();
+	EXPECT_TRUE(v2->hasValue) << "1 v2.HasValue\n" << v2->toString();
+	EXPECT_EQ(1, v1->proposals.size()) << "1:v1 Wrong Number of Robot believes";
+	(*v1->proposals.begin())->getValue(&tmp);
+	EXPECT_DOUBLE_EQ(numeric_limits<double>::min(), tmp) << "1:v1 Wrong value believes";
+	EXPECT_EQ(1, v2->proposals.size()) << "1:v2 Wrong Number of Robot believes";
+
+	(*v2->proposals.begin())->getValue(&tmp);
+	EXPECT_EQ(s, tmp) << "1:v2 Wrong value believes";
+	EXPECT_EQ(cace[0]->communication->getOwnID(), el->getWinner()) << "1 el GetWinner";
+
+	cace[1]->caceSpace->distributeValue(varName, 5.0, v2->getAcceptStrategy());
+	for (int i = 0; i < 10; i++)
+	{
+		this_thread::sleep_for(chrono::milliseconds(10));
+		cace[0]->step(e);
+		cace[1]->step(e);
+	}
+
+	EXPECT_TRUE(v1->hasValue) << "2 v1.HasValue";
+	EXPECT_TRUE(v2->hasValue) << "2 v2.HasValue";
+	EXPECT_EQ(1, v1->proposals.size()) << "2:v1 Wrong Number of Robot believes";
+	(*v1->proposals.begin())->getValue(&tmp);
+	EXPECT_EQ(5, tmp) << "2:v1 Wrong value believes";
+	EXPECT_EQ(1, v2->proposals.size()) << "2:v2 Wrong Number of Robot believes";
+	(*v2->proposals.begin())->getValue(&tmp);
+	EXPECT_DOUBLE_EQ(s, tmp) << "2:v2 Wrong value believes";
+	Election el2(*v1);
+	EXPECT_EQ(cace[1]->communication->getOwnID(), el2.getWinner()) << "2 el GetWinner";
 }

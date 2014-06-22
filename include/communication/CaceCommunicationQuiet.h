@@ -28,7 +28,6 @@ namespace cace
 	{
 	public:
 		CaceCommunicationQuiet(CommunicationWorker* worker, string& nodePrefix, Cace* cace, short id);
-		virtual ~CaceCommunicationQuiet();
 
 		void sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
 										short receiver, unsigned long lamportTime);
