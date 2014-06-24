@@ -46,7 +46,7 @@ namespace cace
 		CaceCommunication(CommunicationWorker* worker, string& nodePrefix, Cace* cace);
 		virtual ~CaceCommunication();
 
-		void init(CommunicationWorker* worker, string& nodePrefix, Cace* cace);
+		virtual void init(CommunicationWorker* worker, string& nodePrefix, Cace* cace);
 
 		void step();
 
@@ -55,9 +55,9 @@ namespace cace
 		bool isBlacklisted(int agentID);
 		void addToBlacklist(int agentID);
 		void removeFromBlackList(int agentID);
-		void cleanUp();
+		virtual void cleanUp();
 		void clearAllMessageLists();
-		void sendEvalString(string m);
+		virtual void sendEvalString(string m);
 		virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name);
 		virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name, unsigned long lamportTime);
 		virtual void sendCaceResponse(shared_ptr<ConsensusVariable> cv, short msgID, short receiver);

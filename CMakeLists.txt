@@ -99,7 +99,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
  include_directories(include ${catkin_INCLUDE_DIRS})
 
-file (GLOB _my_sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/communication/*.cpp src/communication/jobs/*.cpp src/timeManager/*.cpp src/variableStore/*.cpp src/variables/*.cpp src/*.cpp)
+file (GLOB _my_sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/communication/*.cpp src/communication/jobs/*.cpp src/communication/multicast/*.cpp src/timeManager/*.cpp src/variableStore/*.cpp src/variables/*.cpp src/*.cpp)
 
 ## Declare a cpp library
  add_library(${PROJECT_NAME}
@@ -130,15 +130,15 @@ target_link_libraries(caceMonitor ${catkin_LIBRARIES} ${PROJECT_NAME})
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test ${_my_sources} test/caceTests.cpp test/jobTests.cpp test/systemTests.cpp test/applicationTests.cpp test/serialization.cpp)
+catkin_add_gtest(${PROJECT_NAME}-test ${_my_sources} test/caceTests.cpp test/jobTests.cpp test/systemTests.cpp test/applicationTests.cpp test/serialization.cpp test/multicasttests.cpp)
 
 if(TARGET ${PROJECT_NAME}-test)
 target_link_libraries(${PROJECT_NAME}-test
 #${PROJECT_NAME}
 ${catkin_LIBRARIES}
 )
-set_target_properties(${PROJECT_NAME}-test PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage ")
-set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage ")
+set_target_properties(${PROJECT_NAME}-test PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
+set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
 endif()
 
 # catkin_add_nosetests(test)

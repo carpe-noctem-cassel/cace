@@ -9,6 +9,7 @@
 #define CACECOMMUNICATIONQUIET_H_
 
 #include <communication/CaceCommunication.h>
+#include <communication/CaceCommunicationMultiCast.h>
 #include <cace/CaceAcknowledge.h>
 #include <cace/CaceCommand.h>
 #include <variables/ConsensusVariable.h>
@@ -24,7 +25,7 @@ namespace cace
 	class Cace;
 	class CommunicationWorker;
 
-	class CaceCommunicationQuiet : public CaceCommunication
+	class CaceCommunicationQuiet : public CaceCommunicationMultiCast
 	{
 	public:
 		CaceCommunicationQuiet(CommunicationWorker* worker, string& nodePrefix, Cace* cace, short id);

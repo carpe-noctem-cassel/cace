@@ -1,0 +1,105 @@
+/*
+ * CaceMultiCastThread.h
+ *
+ *  Created on: 23.06.2014
+ *      Author: endy
+ */
+
+#ifndef CACEMULTICASTTHREAD_H_
+#define CACEMULTICASTTHREAD_H_
+
+#include <string>
+#include <thread>
+#include "communication/multicast/PracticalSocket.h"
+
+using namespace std;
+
+#define MAX_PACKETSIZE 8192
+
+namespace cacemulticast
+{
+	template<class CommunicationClass>
+	using t_multicastcallback = void (CommunicationClass::*)(char*, int);
+	//typedef void (*t_multicastcallback)(char*, int size);
+
+	template<class CommunicationClass>
+	class CaceMultiCastChannel
+	{
+	public:
+		CaceMultiCastChannel(string address, unsigned short port, t_multicastcallback<CommunicationClass> callback,
+								CommunicationClass* obj);
+		~CaceMultiCastChannel();
+		void publish(const char* bytes, int size);
+
+	protected:
+		static unsigned short sourcePort;
+		bool running;
+		std::thread* t;
+		string address;
+		unsigned short port;
+		UDPSocket udpsocket;
+		void call();
+		char* recvArray;
+		t_multicastcallback<CommunicationClass> callback;
+		CommunicationClass* obj;
+	};
+
+	template<class CommunicationClass>
+	unsigned short CaceMultiCastChannel<CommunicationClass>::sourcePort = 30000;
+
+	template<class CommunicationClass>
+	inline CaceMultiCastChannel<CommunicationClass>::CaceMultiCastChannel(
+			string address, unsigned short port, t_multicastcallback<CommunicationClass> callback,
+			CommunicationClass* obj) :
+			udpsocket(port)
+	{
+		running = true;
+
+		this->obj = obj;
+		this->callback = callback;
+		this->address = address;
+		this->port = port;
+
+		recvArray = new char[MAX_PACKETSIZE];
+
+		udpsocket.setMulticastTTL(1);
+
+		udpsocket.joinGroup(address);
+		t = new std::thread(&CaceMultiCastChannel<CommunicationClass>::call, this);
+	}
+
+	template<class CommunicationClass>
+	inline CaceMultiCastChannel<CommunicationClass>::~CaceMultiCastChannel()
+	{
+		running = false;
+		//udpsocket.leaveGroup(address);
+		udpsocket.disconnect();
+		t->join();
+		//udpsocket.disconnect();
+		delete t;
+		delete[] recvArray;
+	}
+
+	template<class CommunicationClass>
+	inline void CaceMultiCastChannel<CommunicationClass>::publish(const char* bytes, int size)
+	{
+		udpsocket.sendTo(bytes, size, address, port);
+	}
+
+	template<class CommunicationClass>
+	void CaceMultiCastChannel<CommunicationClass>::call()
+	{
+
+		int numBytes = 0;
+		while (true)
+		{
+			numBytes = udpsocket.recvFrom(recvArray, MAX_PACKETSIZE, address, port);
+			if (!running)
+				return;
+			(obj->*callback)(recvArray, numBytes);
+		}
+	}
+
+} /* namespace cace */
+
+#endif /* CACEMULTICASTTHREAD_H_ */

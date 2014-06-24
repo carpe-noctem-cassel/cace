@@ -3,6 +3,7 @@
 #include <cace.h>
 #include <caceSpace.h>
 #include <communication/CaceCommunicationQuiet.h>
+#include <communication/CaceCommunicationMultiCast.h>
 #include <communication/CommunicationWorker.h>
 #include <communication/jobs/BelieveAcknowledgeJob.h>
 #include <communication/jobs/CommandAcknowledgeJob.h>
@@ -74,7 +75,8 @@ namespace cace
 			}
 			else
 			{
-				communication = new CaceCommunication(worker, nodeprefix, this);
+				//communication = new CaceCommunication(worker, nodeprefix, this);
+				communication = new CaceCommunicationMultiCast(worker, nodeprefix, this);
 			}
 			if (id != 0)
 				communication->setOwnID((short)id);
