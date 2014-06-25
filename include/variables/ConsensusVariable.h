@@ -17,6 +17,7 @@
 #include "cace.h"
 #include "CaceTypes.h"
 #include "serializer/serialize.h"
+#include "util/Delegate.h"
 
 using namespace std;
 
@@ -65,7 +66,7 @@ namespace cace
 		acceptStrategy getAcceptStrategy();
 		void setAcceptStrategy(acceptStrategy aS);
 		t_acceptFunction acceptFunction;
-		void acceptProposals(Cace& cace, vector<uint8_t>* value);
+		bool acceptProposals(Cace& cace, vector<uint8_t>* value);
 		void setAcceptFunction(t_acceptFunction func)
 		{
 			acceptFunction = func;
@@ -114,7 +115,11 @@ namespace cace
 		bool electionAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
 		bool listAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
 
+		vector<delegate<void (ConsensusVariable*)>> changeNotify;
+		void notify();
+
 	protected:
+
 		vector<uint8_t> val;
 		string name;
 		short type;

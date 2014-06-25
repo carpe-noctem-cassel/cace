@@ -69,11 +69,10 @@ protected:
 
 	void Step(vector<int>& cacesToStep)
 	{
-		ros::TimerEvent e;
 		for (int i : cacesToStep)
 		{
 			if (i >= 0)
-				cace[i]->step(e);
+				cace[i]->step();
 		}
 	}
 };
@@ -93,8 +92,8 @@ TEST_F(ApplicationTests, QuietMode)
 	for (int i = 0; i < 10; i++)
 	{
 		this_thread::sleep_for(chrono::milliseconds(10));
-		cace[0]->step(e);
-		quietcace->step(e);
+		cace[0]->step();
+		quietcace->step();
 	}
 
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
@@ -269,8 +268,8 @@ TEST_F(ApplicationTests, Election)
 	for (int i = 0; i < 10; i++)
 	{
 		this_thread::sleep_for(chrono::milliseconds(10));
-		cace[0]->step(e);
-		cace[1]->step(e);
+		cace[0]->step();
+		cace[1]->step();
 	}
 	auto v1 = cace[0]->caceSpace->getVariable(varName);
 	auto v2 = cace[1]->caceSpace->getVariable(varName);
@@ -295,8 +294,8 @@ TEST_F(ApplicationTests, Election)
 	for (int i = 0; i < 10; i++)
 	{
 		this_thread::sleep_for(chrono::milliseconds(10));
-		cace[0]->step(e);
-		cace[1]->step(e);
+		cace[0]->step();
+		cace[1]->step();
 	}
 
 	EXPECT_TRUE(v1->hasValue) << "2 v1.HasValue";
@@ -310,3 +309,5 @@ TEST_F(ApplicationTests, Election)
 	Election el2(*v1);
 	EXPECT_EQ(cace[1]->communication->getOwnID(), el2.getWinner()) << "2 el GetWinner";
 }
+
+

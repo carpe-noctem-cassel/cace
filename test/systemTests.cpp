@@ -13,14 +13,34 @@
 #include <thread>
 #include <vector>
 
+//#define USE_ROS
+
 using namespace cace;
+
+class DelegateTest
+{
+public:
+	string notName;
+	void notifyChange(ConsensusVariable* v)
+	{
+		notName = v->getName();
+	}
+};
 
 //Cace* cace;
 class SystemTests : public ::testing::Test
 {
 public:
+	DelegateTest delegateTest;
 	static int iteration;
 protected:
+#ifdef USE_ROS
+	int sleepTimeMSLong = 10;
+	int sleepTimeMSShort = 1;
+#else
+	int sleepTimeMSLong = 1;
+	int sleepTimeMSShort = 1;
+#endif
 
 	vector<Cace*> cace;
 	vector<int> allCaces;
@@ -45,7 +65,7 @@ protected:
 	{
 		vector<int> empty;
 		computePertubations(allCacePertubations, empty);
-		cout << "Possible Pertubations: " << allCacePertubations.size() << " Current Iteration: " << iteration << endl;
+		//cout << "Possible Pertubations: " << allCacePertubations.size() << " Current Iteration: " << iteration << endl;
 		round = iteration++;
 
 		cace.clear();
@@ -60,9 +80,9 @@ protected:
 		allCaces = allCacePertubations[round % allCacePertubations.size()];
 		for (int i = 0; i < allCaces.size(); i++)
 		{
-			cout << allCaces.at(i) << " ";
+			//cout << allCaces.at(i) << " ";
 		}
-		cout << endl;
+		//cout << endl;
 	}
 
 	virtual void TearDown()
@@ -79,7 +99,7 @@ protected:
 		for (int i : cacesToStep)
 		{
 			if (i >= 0)
-				cace[i]->step(e);
+				cace[i]->step();
 		}
 	}
 
@@ -140,7 +160,7 @@ TEST_F(SystemTests, Request)
 
 	for (int i = 0; i < 10; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 	EXPECT_TRUE(cace[1]->caceSpace->checkAvailableResponse(name)) << "Response Available after";
@@ -162,7 +182,7 @@ TEST_F(SystemTests, WriteRequest)
 	cace[1]->agentEngangement(1, false);
 	cace[1]->agentEngangement(2, false);
 	string name = "reqwrite" + to_string(round);
-	this_thread::sleep_for(chrono::milliseconds(200));
+	//this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 
 	shared_ptr<ConsensusVariable> Wvar = make_shared<ConsensusVariable>(name, acceptStrategy::NoDistribution,
 																		std::numeric_limits<long>::max(), 1,
@@ -174,7 +194,7 @@ TEST_F(SystemTests, WriteRequest)
 
 	for (int i = 0; i < 10; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -186,7 +206,7 @@ TEST_F(SystemTests, WriteRequest)
 
 	for (int i = 0; i < 10; i++)
 	{
-		std::chrono::milliseconds dura(10);
+		std::chrono::milliseconds dura(sleepTimeMSLong);
 		std::this_thread::sleep_for(dura);
 		Step(allCaces);
 	}
@@ -213,7 +233,7 @@ TEST_F(SystemTests, Command)
 	double s = 1;
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::ThreeWayHandShake);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
 	shared_ptr<ConsensusVariable> v1 = cace[1]->caceSpace->getVariable(varName);
@@ -230,7 +250,7 @@ TEST_F(SystemTests, Command)
 	EXPECT_DOUBLE_EQ(s, val2) << "Own Believe2 is Not Correct";
 	EXPECT_DOUBLE_EQ(s, val3) << "Own Believe3 is Not Correct";
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 	EXPECT_EQ(v0->proposals.size(), cace.size()-1) << "v0: Wrong numer of Robot Believes";
 	EXPECT_EQ(v1->proposals.size(), cace.size()-1) << "v1: Wrong numer of Robot Believes";
@@ -252,7 +272,7 @@ TEST_F(SystemTests, CommandUpdate)
 	double s = 1;
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::ThreeWayHandShake);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
 	shared_ptr<ConsensusVariable> v1 = cace[1]->caceSpace->getVariable(varName);
@@ -274,7 +294,7 @@ TEST_F(SystemTests, CommandUpdate)
 
 	for (int i = 0; i < 10; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 	EXPECT_EQ(cace.size() - 1, cace[0]->activeRobots.size()) << "4:" + cace[0]->printActiveRobots();
@@ -291,12 +311,16 @@ TEST_F(SystemTests, CommandUpdate)
 	EXPECT_EQ(cace.size() - 1, cace[0]->activeRobots.size()) << "7";
 	EXPECT_EQ(cace.size() - 1, cace[1]->activeRobots.size()) << "8";
 	EXPECT_EQ(cace.size() - 1, cace[2]->activeRobots.size()) << "9";
+
+	delegateTest.notName = "";
+	v2->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&delegateTest, &DelegateTest::notifyChange));
+
 	double s2 = 2;
 	cace[1]->caceSpace->distributeValue(varName, s2, acceptStrategy::ThreeWayHandShake);
 
 	for (int i = 0; i < 10; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 	EXPECT_EQ(cace.size() - 1, cace[0]->activeRobots.size()) << "10";
@@ -332,6 +356,7 @@ TEST_F(SystemTests, CommandUpdate)
 	EXPECT_EQ(s2, curVal) << "3Wrong other Believe0 is Not Correct\n" << v2->toString();
 	v2->proposals.at(1)->getValue(&curVal);
 	EXPECT_EQ(s2, curVal) << "3Wrong other Believe1 is Not Correct\n" << v2->toString();
+	EXPECT_EQ(v2->getName(), delegateTest.notName) << "No Notification";
 }
 
 TEST_F(SystemTests, DefaultConflictHandling3)
@@ -353,13 +378,13 @@ TEST_F(SystemTests, DefaultConflictHandling3)
 	double s2 = 2;
 	cace[1]->timeManager->updateLamportTime(cace[0]->timeManager->lamportTime + 1000);
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::ThreeWayHandShake);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[0]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[2]->step(e);
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[0]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[2]->step();
 	cace[1]->caceSpace->distributeValue(varName, s2, acceptStrategy::ThreeWayHandShake);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
 	shared_ptr<ConsensusVariable> v1 = cace[1]->caceSpace->getVariable(varName);
@@ -370,7 +395,7 @@ TEST_F(SystemTests, DefaultConflictHandling3)
 
 	for (int i = 0; i < 12; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -407,17 +432,17 @@ TEST_F(SystemTests, DefaultConflictHandlingReverseCommandOrder3)
 
 	cace[1]->timeManager->updateLamportTime(cace[0]->timeManager->lamportTime + 1000);
 	cace[1]->caceSpace->distributeValue(varName, s2, acceptStrategy::ThreeWayHandShake);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[1]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[2]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[1]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[2]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 
 	//Reseted because quieck response already updates lamport clock
 	cace[0]->timeManager->lamportTime = 1;
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::ThreeWayHandShake);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
@@ -429,7 +454,7 @@ TEST_F(SystemTests, DefaultConflictHandlingReverseCommandOrder3)
 
 	for (int i = 0; i < 10; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -465,13 +490,13 @@ TEST_F(SystemTests, ElectionConflictHandling2)
 	double s2 = 2;
 	cace[1]->timeManager->updateLamportTime(cace[0]->timeManager->lamportTime + 1000);
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::TwoWayHandShakeElection);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[0]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[2]->step(e);
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[0]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[2]->step();
 	cace[1]->caceSpace->distributeValue(varName, s2, acceptStrategy::TwoWayHandShakeElection);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
@@ -483,7 +508,7 @@ TEST_F(SystemTests, ElectionConflictHandling2)
 
 	for (int i = 0; i < 10; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -520,13 +545,13 @@ TEST_F(SystemTests, DefaultConflictHandling2)
 	double s2 = 2;
 	cace[1]->timeManager->updateLamportTime(cace[0]->timeManager->lamportTime + 1000);
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::TwoWayHandShake);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[0]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[2]->step(e);
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[0]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[2]->step();
 	cace[1]->caceSpace->distributeValue(varName, s2, acceptStrategy::TwoWayHandShake);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
 	shared_ptr<ConsensusVariable> v1 = cace[1]->caceSpace->getVariable(varName);
@@ -537,7 +562,7 @@ TEST_F(SystemTests, DefaultConflictHandling2)
 
 	for (int i = 0; i < 12; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -574,16 +599,16 @@ TEST_F(SystemTests, DefaultConflictHandlingReverseCommandOrder2)
 
 	cace[1]->timeManager->updateLamportTime(cace[0]->timeManager->lamportTime + 1000);
 	cace[1]->caceSpace->distributeValue(varName, s2, acceptStrategy::TwoWayHandShake);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[1]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[2]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[1]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[2]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	//Reseted because quieck response already updates lamport clock
 	cace[0]->timeManager->lamportTime = 1;
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::TwoWayHandShake);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
@@ -595,7 +620,7 @@ TEST_F(SystemTests, DefaultConflictHandlingReverseCommandOrder2)
 
 	for (int i = 0; i < 10; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -631,13 +656,13 @@ TEST_F(SystemTests, DefaultConflictHandling1)
 	double s2 = 2;
 	cace[1]->timeManager->updateLamportTime(cace[0]->timeManager->lamportTime + 1000);
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::FireAndForget);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[0]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[2]->step(e);
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[0]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[2]->step();
 	cace[1]->caceSpace->distributeValue(varName, s2, acceptStrategy::FireAndForget);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
@@ -649,7 +674,7 @@ TEST_F(SystemTests, DefaultConflictHandling1)
 
 	for (int i = 0; i < 12; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -686,16 +711,16 @@ TEST_F(SystemTests, DefaultConflictHandlingReverseCommandOrder1)
 
 	cace[1]->timeManager->updateLamportTime(cace[0]->timeManager->lamportTime + 1000);
 	cace[1]->caceSpace->distributeValue(varName, s2, acceptStrategy::FireAndForget);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[1]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(1));
-	cace[2]->step(e);
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[1]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSShort));
+	cace[2]->step();
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	//Reseted because quieck response already updates lamport clock
 	cace[0]->timeManager->lamportTime = 1;
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::FireAndForget);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 	Step(allCaces);
 
 	shared_ptr<ConsensusVariable> v0 = cace[0]->caceSpace->getVariable(varName);
@@ -707,7 +732,7 @@ TEST_F(SystemTests, DefaultConflictHandlingReverseCommandOrder1)
 
 	for (int i = 0; i < 10; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -743,9 +768,13 @@ TEST_F(SystemTests, Notify)
 	double s = 1;
 	cace[0]->caceSpace->distributeValue(varName, s, acceptStrategy::ThreeWayHandShake);
 
-	this_thread::sleep_for(chrono::milliseconds(10));
-	cace[0]->step(e);
-	cace[1]->step(e);
+	this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
+	cace[0]->step();
+	cace[1]->step();
+
+	delegateTest.notName = "";
+	cace[0]->caceSpace->getVariable(varName)->changeNotify.push_back(
+			delegate<void(ConsensusVariable*)>(&delegateTest, &DelegateTest::notifyChange));
 	//CleanUp all other acks here
 	cace[2]->communication->clearAllMessageLists();
 	cace[2]->worker->clearJobs();
@@ -766,9 +795,9 @@ TEST_F(SystemTests, Notify)
 
 	for (int i = 0; i < 5; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
-		cace[0]->step(e);
-		cace[1]->step(e);
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
+		cace[0]->step();
+		cace[1]->step();
 	}
 	EXPECT_TRUE(v0->proposals.size() == 1) << "v0 before: Wrong numer of Robot Believes";
 	EXPECT_TRUE(v1->proposals.size() == 1) << "v1 before: Wrong numer of Robot Believes";
@@ -778,7 +807,7 @@ TEST_F(SystemTests, Notify)
 
 	for (int i = 0; i < 12; i++)
 	{
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(sleepTimeMSLong));
 		Step(allCaces);
 	}
 
@@ -799,4 +828,5 @@ TEST_F(SystemTests, Notify)
 			<< v1->toString();
 	EXPECT_TRUE(v2->proposals.size() == 2) << "v2 after: Wrong numer of Robot Believes " << v2->proposals.size() << "\n"
 			<< v2->toString();
+	EXPECT_EQ(delegateTest.notName, v1->getName());
 }

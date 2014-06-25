@@ -66,6 +66,24 @@ public:
 		sendSAck++;
 	}
 
+	virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name, unsigned long lamportTime)
+	{
+	}
+	virtual void sendCaceResponse(shared_ptr<ConsensusVariable> cv, short msgID, short receiver,
+									unsigned long lamportTime)
+	{
+	}
+	virtual void sendWriteCommand(shared_ptr<ConsensusVariable> cv, short msgID, short receiver,
+									unsigned long lamportTime)
+	{
+	}
+	virtual void sendCaceWriteAck(string& name, short messageID, short receiver, unsigned long lamportTime)
+	{
+	}
+	virtual void sendTime(TimeManager* m)
+	{
+	}
+
 	/// <summary>
 	/// Anounce Disengange
 	/// </summary>
@@ -364,22 +382,22 @@ TEST_F(JobTests, AckJob)
 	cace->worker->appendJob(job);
 
 	EXPECT_EQ(1, dcom->sendAck) << "Init Send";
-	EXPECT_EQ(job->expectedRobotIDs.size(), 1) <<
-					"Wrong Number of Expected Acks. Should be 1 but is: " << job->expectedRobotIDs.size();
+	EXPECT_EQ(job->expectedRobotIDs.size(), 1) << "Wrong Number of Expected Acks. Should be 1 but is: "
+			<< job->expectedRobotIDs.size();
 
 	job->entities.begin()->lastSent = cace->timeManager->getDistributedTime() / TimeManager::timeResolutionDevisor
 			+ 150000ul * 1000000ul;
 
 	EXPECT_FALSE(job->process()) << "Job is finished, but shouldn't be...";
-	EXPECT_EQ(job->expectedRobotIDs.size(), 1) <<
-					"Wrong Number of Expected Acks. Should be 1 but is: " << job->expectedRobotIDs.size();
+	EXPECT_EQ(job->expectedRobotIDs.size(), 1) << "Wrong Number of Expected Acks. Should be 1 but is: "
+			<< job->expectedRobotIDs.size();
 	EXPECT_EQ(1, dcom->sendAck) << "First Process send";
 
 	job->entities.begin()->lastSent = 0;
 
 	EXPECT_FALSE(job->process()) << "Job is finished, but shouldn't be...";
-	EXPECT_TRUE(job->expectedRobotIDs.size() == 1) <<
-					"Wrong Number of Expected Acks. Should be 1 but is: " << job->expectedRobotIDs.size();
+	EXPECT_TRUE(job->expectedRobotIDs.size() == 1) << "Wrong Number of Expected Acks. Should be 1 but is: "
+			<< job->expectedRobotIDs.size();
 	EXPECT_EQ(2, dcom->sendAck) << "Didn't resend";
 
 	job->entities.begin()->lastSent = 0;

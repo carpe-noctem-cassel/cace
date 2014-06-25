@@ -46,87 +46,68 @@ namespace cace
 		CaceCommunication(CommunicationWorker* worker, string& nodePrefix, Cace* cace);
 		virtual ~CaceCommunication();
 
-		virtual void init(CommunicationWorker* worker, string& nodePrefix, Cace* cace);
+		virtual void step();
+		virtual void startAsynchronous();
 
-		void step();
+		virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name);
+		virtual void sendCaceResponse(shared_ptr<ConsensusVariable> cv, short msgID, short receiver);
+		virtual void sendWriteCommand(shared_ptr<ConsensusVariable> cv, short msgID, short receiver);
+		virtual void sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
+										short receiver);
+		virtual void sendCaceAcknowledge(string& name, vector<uint8_t>& value, short messageID, short receiver,
+											short type);
+		virtual void sendCaceBelieveNotification(shared_ptr<ConsensusVariable> cv, short receiverID, short msgID);
+		virtual void sendCaceWriteAck(string& name, short messageID, short receiver);
+		virtual void sendCaceShortAck(string& name, short messageID, short receiver);
+
+		virtual void init(CommunicationWorker* worker, string& nodePrefix, Cace* cace);
+		virtual void cleanUp();
+		virtual void sendEvalString(string m);
+		virtual void handleCaceVariableRequest(CaceVariableRequestPtr cvr);
+		virtual void handleCaceResponse(CaceCommandPtr cc);
+		virtual void handleCaceWrite(CaceCommandPtr cc);
+		virtual void handleCaceWriteAck(CaceShortAckPtr ca);
+		virtual void handleCaceCommand(CaceCommandPtr cc);
+		virtual void handleCaceAcknowledge(CaceAcknowledgePtr ca);
+		virtual void handleCaceBelieveNotification(CaceBelieveNotificationPtr cbn);
+		virtual void handleCaceShortAck(CaceShortAckPtr sa);
+		virtual void handleCaceTime(CaceTimePtr ct);
+
+		virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name,
+												unsigned long lamportTime) = 0;
+		virtual void sendCaceResponse(shared_ptr<ConsensusVariable> cv, short msgID, short receiver,
+										unsigned long lamportTime) = 0;
+		virtual void sendWriteCommand(shared_ptr<ConsensusVariable> cv, short msgID, short receiver,
+										unsigned long lamportTime) = 0;
+		virtual void sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
+										short receiver, unsigned long lamportTime) = 0;
+		virtual void sendCaceAcknowledge(string& name, vector<uint8_t>& value, short messageID, short receiver,
+											short type, unsigned long lamportTime) = 0;
+		virtual void sendCaceBelieveNotification(shared_ptr<ConsensusVariable> cv, short receiverID, short msgID,
+													unsigned long lamportTime) = 0;
+		virtual void sendCaceWriteAck(string& name, short messageID, short receiver, unsigned long lamportTime) = 0;
+		virtual void sendCaceShortAck(string& name, short messageID, short receiver, unsigned long lamportTime) = 0;
+		virtual void sendTime(TimeManager* m) = 0;
+
+		virtual void anounceDisengange();
 
 		int getOwnID();
 		void setOwnID(int id);
 		bool isBlacklisted(int agentID);
 		void addToBlacklist(int agentID);
 		void removeFromBlackList(int agentID);
-		virtual void cleanUp();
 		void clearAllMessageLists();
-		virtual void sendEvalString(string m);
-		virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name);
-		virtual void sendCaceVariableRequest(short receiverID, short msgID, string& name, unsigned long lamportTime);
-		virtual void sendCaceResponse(shared_ptr<ConsensusVariable> cv, short msgID, short receiver);
-		virtual void sendCaceResponse(shared_ptr<ConsensusVariable> cv, short msgID, short receiver,
-										unsigned long lamportTime);
-
-		virtual void handleCaceVariableRequest(CaceVariableRequestPtr cvr);
-		virtual void handleCaceResponse(CaceCommandPtr cc);
-		virtual void handleCaceWrite(CaceCommandPtr cc);
-		virtual void sendWriteCommand(shared_ptr<ConsensusVariable> cv, short msgID, short receiver);
-		virtual void sendWriteCommand(shared_ptr<ConsensusVariable> cv, short msgID, short receiver,
-										unsigned long lamportTime);
-		virtual void handleCaceWriteAck(CaceShortAckPtr ca);
-		virtual void handleCaceCommand(CaceCommandPtr cc);
 		list<CaceCommandPtr> getCommands();
-		virtual void sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
-										short receiver);
-		virtual void sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
-										short receiver, unsigned long lamportTime);
-		virtual void handleCaceAcknowledge(CaceAcknowledgePtr ca);
-		list<CaceAcknowledgePtr> getAcknowledgesAndRemove(short msgID);
+		//list<CaceAcknowledgePtr> getAcknowledgesAndRemove(short msgID);
 		list<CaceShortAckPtr> getWriteAcknowledgesAndRemove(short msgID);
-		virtual void sendCaceAcknowledge(string& name, vector<uint8_t>& value, short messageID, short receiver,
-											short type);
-		virtual void sendCaceAcknowledge(string& name, vector<uint8_t>& value, short messageID, short receiver,
-											short type, unsigned long lamportTime);
-		virtual void handleCaceBelieveNotification(CaceBelieveNotificationPtr cbn);
 		list<CaceBelieveNotificationPtr> getCaceBelieveNotifications();
-		virtual void sendCaceBelieveNotification(shared_ptr<ConsensusVariable> cv, short receiverID, short msgID);
-		virtual void sendCaceBelieveNotification(shared_ptr<ConsensusVariable> cv, short receiverID, short msgID,
-													unsigned long lamportTime);
-		virtual void sendCaceWriteAck(string& name, short messageID, short receiver);
-		virtual void sendCaceWriteAck(string& name, short messageID, short receiver, unsigned long lamportTime);
-		virtual void sendCaceShortAck(string& name, short messageID, short receiver);
-		virtual void sendCaceShortAck(string& name, short messageID, short receiver, unsigned long lamportTime);
-		virtual void handleCaceShortAck(CaceShortAckPtr sa);
-		virtual void sendTime(TimeManager* m);
-		virtual void handleCaceTime(CaceTimePtr ct);
 		list<CaceShortAckPtr> getCaceShortAcksAndRemove(short msgID);
-		virtual void anounceDisengange();
 		string printMessageQueueStates();
 
 		set<int> agentBlacklist;
-
-		ros::NodeHandle rosNode;
-		ros::AsyncSpinner* spinner;
 		int ownID;
 	protected:
 		CaceCommunication();
-
-		ros::Publisher commandPublisher;
-		ros::Subscriber commandSubscriber;
-		ros::Publisher ackPublisher;
-		ros::Subscriber ackSubscriber;
-		ros::Publisher shortAckPublisher;
-		ros::Subscriber shortAckSubscriber;
-		ros::Publisher notificationPublisher;
-		ros::Subscriber notificationSubscriber;
-		ros::Publisher timePublisher;
-		ros::Subscriber timeSubscriber;
-		ros::Publisher varRequestPublisher;
-		ros::Subscriber varRequestSubscriber;
-		ros::Publisher writePublisher;
-		ros::Subscriber writeSubscriber;
-		ros::Publisher writeAckPublisher;
-		ros::Subscriber writeAckSubscriber;
-		ros::Publisher responsePublisher;
-		ros::Subscriber responseSubscriber;
-		ros::Publisher evalPublisher;
 
 		list<CaceCommandPtr> commands;
 		mutex cmdMutex;

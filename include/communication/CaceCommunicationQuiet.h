@@ -10,6 +10,7 @@
 
 #include <communication/CaceCommunication.h>
 #include <communication/CaceCommunicationMultiCast.h>
+#include <communication/CaceCommunicationRos.h>
 #include <cace/CaceAcknowledge.h>
 #include <cace/CaceCommand.h>
 #include <variables/ConsensusVariable.h>
@@ -25,7 +26,11 @@ namespace cace
 	class Cace;
 	class CommunicationWorker;
 
+#ifdef USE_ROS
+	class CaceCommunicationQuiet : public CaceCommunicationRos
+#else
 	class CaceCommunicationQuiet : public CaceCommunicationMultiCast
+#endif
 	{
 	public:
 		CaceCommunicationQuiet(CommunicationWorker* worker, string& nodePrefix, Cace* cace, short id);

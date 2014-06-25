@@ -58,6 +58,9 @@ namespace cace
 		this->lamportAge = v.lamportAge;
 		if (v.type != 0)
 			this->type = v.type;
+
+		//notifies all subscribers about change
+		notify();
 	}
 	bool ConsensusVariable::valueEqual(vector<uint8_t>* cmp)
 	{
@@ -318,9 +321,11 @@ namespace cace
 		return true;
 	}
 
-	void ConsensusVariable::acceptProposals(Cace& cace, vector<uint8_t>* value)
+	bool ConsensusVariable::acceptProposals(Cace& cace, vector<uint8_t>* value)
 	{
-		(this->*acceptFunction)(cace, value);
+		bool ret = (this->*acceptFunction)(cace, value);
+		this->notify();
+		return ret;
 	}
 
 	bool ConsensusVariable::listAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
@@ -548,6 +553,13 @@ namespace cace
 		val.clear();
 		serialize(*in, val);
 		type = CaceType::CStringList;
+	}
+
+	void ConsensusVariable::notify()
+	{
+		for(auto func : changeNotify) {
+			func(this);
+		}
 	}
 
 } /* namespace cace */

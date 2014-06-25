@@ -119,6 +119,7 @@ add_dependencies(${PROJECT_NAME} ${catkin_LIBRARIES})
  target_link_libraries(${PROJECT_NAME}
    ${catkin_LIBRARIES}
  )
+#set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DUSE_ROS")
 
  ## Declare a cpp executable
 add_executable(caceMonitor src/caceMonitor/caceMonitor.cpp)
@@ -139,6 +140,19 @@ ${catkin_LIBRARIES}
 )
 set_target_properties(${PROJECT_NAME}-test PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
 set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
+#set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g -DUSE_ROS")
 endif()
 
+
+catkin_add_gtest(${PROJECT_NAME}-eval ${_my_sources} test/eval/speed.cpp)
+
+if(TARGET ${PROJECT_NAME}-test)
+target_link_libraries(${PROJECT_NAME}-eval
+#${PROJECT_NAME}
+${catkin_LIBRARIES}
+)
+set_target_properties(${PROJECT_NAME}-eval PROPERTIES LINK_FLAGS "")
+set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "")
+#set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g -DUSE_ROS")
+endif()
 # catkin_add_nosetests(test)

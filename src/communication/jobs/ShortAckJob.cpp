@@ -97,6 +97,7 @@ namespace cace
 				var->setRobotID(ack->senderID);
 				cv->proposals.push_back(var);
 			}
+			cv->notify();
 			//cv->acceptProposals(*cace, nullptr);
 		}
 		else

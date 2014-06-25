@@ -4,6 +4,7 @@
 #include <caceSpace.h>
 #include <communication/CaceCommunicationQuiet.h>
 #include <communication/CaceCommunicationMultiCast.h>
+#include <communication/CaceCommunicationRos.h>
 #include <communication/CommunicationWorker.h>
 #include <communication/jobs/BelieveAcknowledgeJob.h>
 #include <communication/jobs/CommandAcknowledgeJob.h>
@@ -18,8 +19,11 @@
 #include <memory>
 #include <sstream>
 #include <fstream>
+#include <chrono>
 
 //#include <string>
+
+//#define USE_ROS
 
 namespace cace
 {
@@ -32,6 +36,14 @@ namespace cace
 
 	Cace::~Cace()
 	{
+#ifndef USE_ROS
+		if (isActive && timer!=nullptr)
+		{
+			isActive = false;
+			timer->join();
+			delete timer;
+		}
+#endif
 		//cout << "Killing Communication ..." << endl;
 		destroy();
 		delete communication;
@@ -47,6 +59,10 @@ namespace cace
 
 	Cace::Cace(string prefix, int id, bool quiet)
 	{
+#ifndef USE_ROS
+		timer = nullptr;
+		isActive = false;
+#endif
 		communication = nullptr;
 		variableStore = nullptr;
 		worker = nullptr;
@@ -75,8 +91,11 @@ namespace cace
 			}
 			else
 			{
-				//communication = new CaceCommunication(worker, nodeprefix, this);
+#ifdef USE_ROS
+				communication = new CaceCommunicationRos(worker, nodeprefix, this);
+#else
 				communication = new CaceCommunicationMultiCast(worker, nodeprefix, this);
+#endif
 			}
 			if (id != 0)
 				communication->setOwnID((short)id);
@@ -108,12 +127,33 @@ namespace cace
 		communication->cleanUp();
 		delete communication;
 		quietMode = false;
-		communication = new CaceCommunication(worker, rosNodePrefix, this);
+#ifdef USE_ROS
+		communication = new CaceCommunicationRos(worker, rosNodePrefix, this);
+#else
+		communication = new CaceCommunicationMultiCast(worker, rosNodePrefix, this);
+#endif
 		communication->setOwnID((short)id);
 		timeManager = new TimeManager(communication);
 	}
 
-	void Cace::step(const ros::TimerEvent& e)
+#ifdef USE_ROS
+	void Cace::rosStep(const ros::TimerEvent& e)
+	{
+		step();
+	}
+#else
+	void Cace::timerThread()
+	{
+		int t = sleepTime * 1000.0;
+		while (isActive)
+		{
+			this_thread::sleep_for(chrono::milliseconds(t));
+			step();
+		}
+	}
+#endif
+
+	void Cace::step()
 	{
 		//Node this is only required in stepwise mode! Nevertheless it doesn't hurt!
 		communication->step();
@@ -174,8 +214,13 @@ namespace cace
 
 	void Cace::run()
 	{
-		timer = communication->rosNode.createTimer(ros::Duration(0.033), &Cace::step, this, false);
-		communication->spinner->start();
+#ifdef USE_ROS
+		timer = ((CaceCommunicationRos*)communication)->rosNode.createTimer(ros::Duration(sleepTime), &Cace::rosStep, this, false);
+		communication->startAsynchronous();
+#else
+		isActive = true;
+		timer = new std::thread(&Cace::timerThread, this);
+#endif
 	}
 
 	vector<int>* Cace::getActiveRobots()

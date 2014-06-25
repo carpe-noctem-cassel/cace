@@ -65,6 +65,7 @@ namespace cace
 			cv->setType(cmd->type);
 			cv->setAcceptStrategy((acceptStrategy)cmd->level);
 			cv->setRobotID(caceCommunication->getOwnID());
+			cv->notify();
 		}
 		else
 		{

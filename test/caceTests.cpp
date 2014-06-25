@@ -34,8 +34,21 @@
 
 using namespace cace;
 
+class DelegateTest
+{
+public:
+	string notName;
+	void notifyChange(ConsensusVariable* v)
+	{
+		notName = v->getName();
+	}
+};
+
 class CaceBasics : public ::testing::Test
 {
+public:
+	DelegateTest delegateTest;
+
 protected:
 	Cace* mycace = nullptr;
 
@@ -67,6 +80,7 @@ protected:
 	}
 
 	// Objects declared here can be used by all tests in the test case for Foo.
+
 	void commandjobTest()
 	{
 		mycace->activeRobots.clear();
@@ -434,7 +448,7 @@ TEST_F(CaceBasics, VariableTypesAndByteConversion)
 	string s = "name";
 	string outString = "";
 
-	tuple<int, double, string, vector<int>> tpl = std::make_tuple(10, 10.0, "string", vector<int>{1,2});
+	tuple<int, double, string, vector<int>> tpl = std::make_tuple(10, 10.0, "string", vector<int> {1, 2});
 	tuple<int, double, string, vector<int>> outtpl;
 
 	vector<string> sl;
@@ -613,6 +627,34 @@ TEST_F(CaceBasics, DefaultConflictResolutionSelf)
 	EXPECT_TRUE(value == 1) << "3 Wrong Value: " << value;
 }
 
+TEST_F(CaceBasics, changeNotification)
+{
+	mycace->activeRobots.clear();
+	mycace->agentEngangement(2, false);
+	mycace->agentEngangement(3, false);
+	delegateTest.notName = "";
+
+
+	ConsensusVariable v("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake, std::numeric_limits<long>::max(), 1,
+						1000, 1, CaceType::CDouble);
+	v.setValue(1.0);
+	v.setLamportAge(1);
+
+	//Lamport Age = 2
+	auto v2 = make_shared<ConsensusVariable>("A1", (acceptStrategy)acceptStrategy::ThreeWayHandShake,
+												std::numeric_limits<long>::max(), 2, 1000, 2, CaceType::CDouble);
+	v2->setValue(2.0);
+	v2->setLamportAge(2);
+
+	v.proposals.push_back(v2);
+
+	v.changeNotify.push_back(delegate<void(ConsensusVariable*)>(&delegateTest, &DelegateTest::notifyChange));
+
+	EXPECT_TRUE(v.checkConflict(*mycace)) << "No Conflict detected: " << v.checkConflict(*mycace);
+	v.acceptProposals(*mycace, nullptr);
+	EXPECT_EQ(delegateTest.notName, v2->getName()) << "Delegate Not called";
+}
+
 TEST_F(CaceBasics, CommandJob)
 {
 	commandjobTest();
@@ -668,7 +710,7 @@ TEST_F(CaceBasics, CommandArrival)
 	mycace->communication->handleCaceCommand(cmd);
 
 	ros::TimerEvent e;
-	mycace->step(e);
+	mycace->step();
 
 	double val = 0;
 

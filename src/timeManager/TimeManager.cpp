@@ -5,18 +5,20 @@
  *      Author: endy
  */
 
+//#define USE_ROS
+
 #include "timeManager/TimeManager.h"
 #include "communication/CaceCommunication.h"
 #include "SystemConfig.h"
 
 namespace cace
 {
-	unsigned long TimeManager::timeResolutionDevisor=1;
-	unsigned long TimeManager::timeMessageInterval=1;
+	unsigned long TimeManager::timeResolutionDevisor = 1;
+	unsigned long TimeManager::timeMessageInterval = 1;
 
 	TimeManager::TimeManager(CaceCommunication* com)
 	{
-		lastSent=0;
+		lastSent = 0;
 		lamportTime = 1;
 		timeDiff = 0;
 		this->com = com;
@@ -29,7 +31,8 @@ namespace cace
 		this->resendArrivalPropability = (*sc)["Cace"]->get<double>("Cace.ResendArrivalPropability", NULL);
 
 		AgentCommunicationModel::defaultDelay = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelay", NULL);
-		AgentCommunicationModel::defaultDelayVariance = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelayVariance", NULL);
+		AgentCommunicationModel::defaultDelayVariance = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelayVariance",
+																							NULL);
 	}
 
 	TimeManager::~TimeManager()
@@ -38,14 +41,26 @@ namespace cace
 
 	unsigned long TimeManager::getDistributedTime()
 	{
+#ifdef USE_ROS
 		ros::Time now = ros::Time::now();
 		return timeDiff + ((unsigned long)now.sec) * 1000000000ul + (unsigned long)now.nsec;
+#else
+		auto now = std::chrono::system_clock::now();
+		auto duration = now.time_since_epoch();
+		return timeDiff + std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+#endif
 	}
 
 	unsigned long TimeManager::getLocalTime()
 	{
+#ifdef USE_ROS
 		ros::Time now = ros::Time::now();
 		return ((unsigned long)now.sec) * 1000000000ul + (unsigned long)now.nsec;
+#else
+		auto now = std::chrono::system_clock::now();
+		auto duration = now.time_since_epoch();
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+#endif
 	}
 
 	void TimeManager::updateLamportTime(unsigned long seenTime)
@@ -119,8 +134,8 @@ namespace cace
 
 		lock_guard<std::mutex> lock(this->modelMutex);
 		//cout << "please implement this! (TimeManager.cpp:AddTimeMessage)" << endl;
-		AgentTimeData* agt = new AgentTimeData(ct->localtime, ct->distributedTime, (ulong)((long)receivedTime + timeDiff),
-												receivedTime, ct->senderID);
+		AgentTimeData* agt = new AgentTimeData(ct->localtime, ct->distributedTime,
+												(ulong)((long)receivedTime + timeDiff), receivedTime, ct->senderID);
 
 		if (agentModels.find(ct->senderID) == agentModels.end())
 		{

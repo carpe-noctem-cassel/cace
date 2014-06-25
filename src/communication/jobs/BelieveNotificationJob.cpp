@@ -57,7 +57,7 @@ namespace cace
 	bool BelieveNotificationJob::process()
 	{
 		attempts++;
-		caceCommunication->getAcknowledgesAndRemove(msgID);
+		//caceCommunication->getAcknowledgesAndRemove(msgID);
 
 		//Check for variable update (if something "newer" updated our variable we are not interessted in delivering our massge anymore!?)
 		for (int i = 0; i < expectedRobotIDs.size(); i++)

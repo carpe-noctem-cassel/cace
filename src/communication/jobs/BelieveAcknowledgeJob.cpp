@@ -180,10 +180,10 @@ namespace cace
 			{
 				//add believe
 				auto var = make_shared<ConsensusVariable>(notification->variableName,
-																(acceptStrategy)notification->level,
-																notification->validityTime, notification->senderID,
-																notification->decissionTime, notification->lamportTime,
-																notification->type);
+															(acceptStrategy)notification->level,
+															notification->validityTime, notification->senderID,
+															notification->decissionTime, notification->lamportTime,
+															notification->type);
 				var->setValue(notification->value);
 				var->setRobotID(notification->senderID);
 				cv->proposals.push_back(var);
@@ -197,11 +197,10 @@ namespace cace
 												notification->validityTime, caceCommunication->getOwnID(),
 												notification->decissionTime, notification->lamportTime,
 												notification->type);
-			auto co = make_shared<ConsensusVariable>(notification->variableName,
-															(acceptStrategy)notification->level,
-															notification->validityTime, notification->senderID,
-															notification->decissionTime, notification->lamportTime,
-															notification->type);
+			auto co = make_shared<ConsensusVariable>(notification->variableName, (acceptStrategy)notification->level,
+														notification->validityTime, notification->senderID,
+														notification->decissionTime, notification->lamportTime,
+														notification->type);
 			co->setValue(notification->value);
 			cv->proposals.push_back(co);
 

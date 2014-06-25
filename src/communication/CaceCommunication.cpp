@@ -46,35 +46,9 @@ namespace cace
 	{
 		this->cace = cace;
 		this->worker = worker;
+	}
 
-		//RosSharp.Init("Cace", null);
-		//rosNode = new Node(nodePrefix+SystemConfig.RobotNodeName("Cace"));
-		//RosSharp.Init(nodePrefix+SystemConfig.RobotNodeName("Cace"), null);
-
-		spinner = new ros::AsyncSpinner(4);
-
-		commandPublisher = rosNode.advertise<CaceCommand>("/Cace/CaceCommand", 10);
-		ackPublisher = rosNode.advertise<CaceAcknowledge>("/Cace/CaceAcknowledge", 10);
-		shortAckPublisher = rosNode.advertise<CaceShortAck>("/Cace/CaceShortAck", 10);
-		notificationPublisher = rosNode.advertise<CaceBelieveNotification>("/Cace/CaceBelieveNotification", 10);
-		timePublisher = rosNode.advertise<CaceTime>("/Cace/CaceTime", 10);
-		varRequestPublisher = rosNode.advertise<CaceVariableRequest>("/Cace/CaceVariableRequest", 10);
-		responsePublisher = rosNode.advertise<CaceCommand>("/Cace/CaceResponse", 10);
-		writePublisher = rosNode.advertise<CaceCommand>("/Cace/CaceWriteCommand", 10);
-		writeAckPublisher = rosNode.advertise<CaceShortAck>("/Cace/CaceWriteAck", 10);
-		evalPublisher = rosNode.advertise<std_msgs::String>("/Cace/Evaluation", 10);
-
-		commandSubscriber = rosNode.subscribe("/Cace/CaceCommand", 10, &CaceCommunication::handleCaceCommand, this);
-		ackSubscriber = rosNode.subscribe("/Cace/CaceAcknowledge", 10, &CaceCommunication::handleCaceAcknowledge, this);
-		shortAckSubscriber = rosNode.subscribe("/Cace/CaceShortAck", 10, &CaceCommunication::handleCaceShortAck, this);
-		notificationSubscriber = rosNode.subscribe("/Cace/CaceBelieveNotification", 10,
-													&CaceCommunication::handleCaceBelieveNotification, this);
-		timeSubscriber = rosNode.subscribe("/Cace/CaceTime", 10, &CaceCommunication::handleCaceTime, this);
-		varRequestSubscriber = rosNode.subscribe("/Cace/CaceVariableRequest", 10,
-													&CaceCommunication::handleCaceVariableRequest, this);
-		writeSubscriber = rosNode.subscribe("/Cace/CaceWriteCommand", 10, &CaceCommunication::handleCaceWrite, this);
-		writeAckSubscriber = rosNode.subscribe("/Cace/CaceWriteAck", 10, &CaceCommunication::handleCaceWriteAck, this);
-		responseSubscriber = rosNode.subscribe("/Cace/CaceResponse", 10, &CaceCommunication::handleCaceResponse, this);
+	void CaceCommunication::startAsynchronous() {
 	}
 
 	int CaceCommunication::getOwnID()
@@ -97,7 +71,6 @@ namespace cace
 
 	void CaceCommunication::step()
 	{
-		ros::spinOnce();
 	}
 
 	bool CaceCommunication::isBlacklisted(int agentID)
@@ -130,18 +103,6 @@ namespace cace
 
 	void CaceCommunication::cleanUp()
 	{
-		spinner->stop();
-		delete spinner;
-		commandSubscriber.shutdown();
-		ackSubscriber.shutdown();
-		shortAckSubscriber.shutdown();
-		notificationSubscriber.shutdown();
-		timeSubscriber.shutdown();
-		varRequestSubscriber.shutdown();
-		writeSubscriber.shutdown();
-		writeAckSubscriber.shutdown();
-		responseSubscriber.shutdown();
-		rosNode.shutdown();
 	}
 
 	void CaceCommunication::clearAllMessageLists()
@@ -174,9 +135,6 @@ namespace cace
 
 	void CaceCommunication::sendEvalString(string m)
 	{
-		std_msgs::String s;
-		s.data = m;
-		evalPublisher.publish(s);
 	}
 
 	void CaceCommunication::sendCaceVariableRequest(short receiverID, short msgID, string& name)
@@ -185,42 +143,10 @@ namespace cace
 		sendCaceVariableRequest(receiverID, msgID, name, cace->timeManager->lamportTime);
 	}
 
-	void CaceCommunication::sendCaceVariableRequest(short receiverID, short msgID, string& name,
-													unsigned long lamportTime)
-	{
-		cace->timeManager->lamportTime++;
-		CaceVariableRequest cvr;
-		cvr.senderID = ownID;
-		cvr.receiverID = receiverID;
-		cvr.msgID = msgID;
-		cvr.variableName = name;
-
-		varRequestPublisher.publish(cvr);
-	}
-
 	void CaceCommunication::sendCaceResponse(shared_ptr<ConsensusVariable> cv, short msgID, short receiver)
 	{
 		cace->timeManager->lamportTime++;
 		sendCaceResponse(cv, msgID, receiver, cace->timeManager->lamportTime);
-	}
-
-	void CaceCommunication::sendCaceResponse(shared_ptr<ConsensusVariable> cv, short msgID, short receiver,
-												unsigned long lamportTime)
-	{
-		CaceCommand cc;
-		cc.decissionTime = cv->getDecissionTime();
-		cc.lamportTime = lamportTime;
-		cc.level = cv->getAcceptStrategy();
-		cc.msgID = (short)msgID;
-		cc.validityTime = cv->getValidityTime();
-		cc.value = cv->getValue();
-		cc.variableName = cv->getName();
-		cc.senderID = ownID;
-		//Broadcast
-		cc.receiverID = receiver;
-		cc.type = (char)cv->getType();
-
-		responsePublisher.publish(cc);
 	}
 
 	void CaceCommunication::handleCaceVariableRequest(CaceVariableRequestPtr cvr)
@@ -292,24 +218,6 @@ namespace cace
 		sendWriteCommand(cv, msgID, receiver, cace->timeManager->lamportTime);
 	}
 
-	void CaceCommunication::sendWriteCommand(shared_ptr<ConsensusVariable> cv, short msgID, short receiver,
-												unsigned long lamportTime)
-	{
-		CaceCommand cc;
-		cc.decissionTime = cv->getDecissionTime();
-		cc.lamportTime = lamportTime;
-		cc.level = cv->getAcceptStrategy();
-		cc.msgID = (short)msgID;
-		cc.validityTime = cv->getValidityTime();
-		cc.value = cv->getValue();
-		cc.variableName = cv->getName();
-		cc.senderID = ownID;
-		cc.receiverID = receiver;
-		cc.type = (char)cv->getType();
-
-		writePublisher.publish(cc);
-	}
-
 	void CaceCommunication::handleCaceWriteAck(CaceShortAckPtr ca)
 	{
 		if (isBlacklisted(ca->senderID))
@@ -363,25 +271,6 @@ namespace cace
 		sendCaceCommand(cv, msgID, value, receiver, cace->timeManager->lamportTime);
 	}
 
-	void CaceCommunication::sendCaceCommand(shared_ptr<ConsensusVariable> cv, short msgID, vector<uint8_t>& value,
-											short receiver, unsigned long lamportTime)
-	{
-		CaceCommand cc;
-		cc.decissionTime = cv->getDecissionTime();
-		cc.lamportTime = lamportTime;
-		cc.level = cv->getAcceptStrategy();
-		cc.msgID = (short)msgID;
-		cc.validityTime = cv->getValidityTime();
-		cc.value = value;
-		cc.variableName = cv->getName();
-		cc.senderID = ownID;
-		//Broadcast
-		cc.receiverID = receiver;
-		cc.type = (char)cv->getType();
-
-		commandPublisher.publish(cc);
-	}
-
 	void CaceCommunication::handleCaceAcknowledge(CaceAcknowledgePtr ca)
 	{
 		//Console.WriteLine("Ca:"+ca.SenderID+" "+OwnID+" R: "+ca.ReceiverID + " ID " +ca.MsgID + " LT: " +ca.LamportTime);
@@ -399,12 +288,12 @@ namespace cace
 			worker->appendJob(
 					(AbstractCommunicationJob*)new ShortAckJob(ca->variableName, ptr, empty,
 																cace->timeManager->lamportTime, cace, ca));
-			lock_guard<std::mutex> lock(ackMutex);
-			acknowledges.push_back(ca);
+			//lock_guard<std::mutex> lock(ackMutex);
+			//acknowledges.push_back(ca);
 		}
 	}
 
-	list<CaceAcknowledgePtr> CaceCommunication::getAcknowledgesAndRemove(short msgID)
+	/*list<CaceAcknowledgePtr> CaceCommunication::getAcknowledgesAndRemove(short msgID)
 	{
 		list<CaceAcknowledgePtr> ret;
 		lock_guard<std::mutex> lock(ackMutex);
@@ -421,7 +310,7 @@ namespace cace
 			it++;
 		}
 		return ret;
-	}
+	}*/
 
 	list<CaceShortAckPtr> CaceCommunication::getWriteAcknowledgesAndRemove(short msgID)
 	{
@@ -447,24 +336,6 @@ namespace cace
 	{
 		cace->timeManager->lamportTime++;
 		sendCaceAcknowledge(name, value, messageID, receiver, type, cace->timeManager->lamportTime);
-	}
-
-	void CaceCommunication::sendCaceAcknowledge(string& name, vector<uint8_t>& value, short messageID, short receiver,
-												short type, unsigned long lamportTime)
-	{
-		CaceAcknowledge ca;
-
-		ca.lamportTime = lamportTime;
-		ca.msgID = messageID;
-		ca.senderID = ownID;
-		ca.receiverID = receiver;
-		ca.type = (char)type;
-
-		//is This a problem?
-		ca.value = value;
-		ca.variableName = name;
-
-		ackPublisher.publish(ca);
 	}
 
 	void CaceCommunication::handleCaceBelieveNotification(CaceBelieveNotificationPtr cbn)
@@ -502,58 +373,16 @@ namespace cace
 		sendCaceBelieveNotification(cv, receiverID, msgID, cace->timeManager->lamportTime);
 	}
 
-	void CaceCommunication::sendCaceBelieveNotification(shared_ptr<ConsensusVariable> cv, short receiverID, short msgID,
-														unsigned long lamportTime)
-	{
-		CaceBelieveNotification cbn;
-		cbn.decissionTime = cv->getDecissionTime();
-		cbn.lamportTime = lamportTime;
-		cbn.level = cv->getAcceptStrategy();
-		cbn.msgID = msgID;
-		cbn.validityTime = cv->getValidityTime();
-		cbn.value = cv->getValue();
-		cbn.variableName = cv->getName();
-		cbn.senderID = ownID;
-		cbn.receiverID = receiverID;
-		cbn.type = (char)cv->getType();
-
-		notificationPublisher.publish(cbn);
-	}
-
 	void CaceCommunication::sendCaceWriteAck(string& name, short messageID, short receiver)
 	{
 		cace->timeManager->lamportTime++;
 		sendCaceShortAck(name, messageID, receiver, cace->timeManager->lamportTime);
 	}
 
-	void CaceCommunication::sendCaceWriteAck(string& name, short messageID, short receiver, unsigned long lamportTime)
-	{
-		CaceShortAck sa;
-		sa.lamportTime = lamportTime;
-		sa.msgID = messageID;
-		sa.senderID = ownID;
-		sa.receiverID = receiver;
-		sa.variableName = name;
-
-		writeAckPublisher.publish(sa);
-	}
-
 	void CaceCommunication::sendCaceShortAck(string& name, short messageID, short receiver)
 	{
 		cace->timeManager->lamportTime++;
 		sendCaceShortAck(name, messageID, receiver, cace->timeManager->lamportTime);
-	}
-
-	void CaceCommunication::sendCaceShortAck(string& name, short messageID, short receiver, unsigned long lamportTime)
-	{
-		CaceShortAck sa;
-		sa.lamportTime = lamportTime;
-		sa.msgID = messageID;
-		sa.senderID = ownID;
-		sa.receiverID = receiver;
-		sa.variableName = name;
-
-		shortAckPublisher.publish(sa);
 	}
 
 	void CaceCommunication::handleCaceShortAck(CaceShortAckPtr sa)
@@ -574,17 +403,6 @@ namespace cace
 				shortAcks.push_back(sa);
 			}
 		}
-	}
-
-	void CaceCommunication::sendTime(TimeManager* m)
-	{
-		CaceTime ct;
-		ct.senderID = ownID;
-		ct.distributedTime = m->getDistributedTime();
-		ct.localtime = m->getLocalTime();
-		ct.lamportTime = cace->timeManager->lamportTime++;
-
-		timePublisher.publish(ct);
 	}
 
 	void CaceCommunication::handleCaceTime(CaceTimePtr ct)
