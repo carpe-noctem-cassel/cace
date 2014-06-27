@@ -186,7 +186,7 @@ namespace cace
 		return ret;
 	}
 
-	void CaceSpace::distributeVariable(shared_ptr<ConsensusVariable> var)
+	void CaceSpace::distributeVariable(shared_ptr<ConsensusVariable>& var)
 	{
 		if (store->existsVariable(var->getName()))
 		{

@@ -5,7 +5,9 @@
  *      Author: endy
  */
 
-
+#include <boost/asio.hpp>
+#include "boost/bind.hpp"
+#include <communication/multicast/PracticalSocket.h>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <cace/CaceAcknowledge.h>
 #include <cace/CaceType.h>
@@ -37,24 +39,28 @@
 #include <tuple>
 
 using namespace cace;
+using namespace std;
+using namespace std::chrono;
 
-class DelegateTest
+class TimeMeasure
 {
 public:
-	string notName;
+	high_resolution_clock::time_point time;
 	void notifyChange(ConsensusVariable* v)
 	{
-		notName = v->getName();
+		time = high_resolution_clock::now();
 	}
 };
 
 class SpeedEval : public ::testing::Test
 {
 public:
-	DelegateTest delegateTest;
+	TimeMeasure V1Time;
+	TimeMeasure V2Time;
 
 protected:
-	Cace* mycace = nullptr;
+	Cace* cace1 = nullptr;
+	Cace* cace2 = nullptr;
 
 	SpeedEval()
 	{
@@ -71,14 +77,21 @@ protected:
 
 	virtual void SetUp()
 	{
-		mycace = Cace::getEmulated("", 254);
+		cace1 = Cace::getEmulated("", 1);
+		cace2 = Cace::getEmulated("", 2);
+		cace1->activeRobots.push_back(2);
+		cace1->communication->startAsynchronous();
+		cace2->activeRobots.push_back(1);
+		cace2->communication->startAsynchronous();
+		this_thread::sleep_for(chrono::milliseconds(1));
 		// Code here will be called immediately after the constructor (right
 		// before each test).
 	}
 
 	virtual void TearDown()
 	{
-		delete mycace;
+		delete cace1;
+		delete cace2;
 		// Code here will be called immediately after each test (right
 		// before the destructor).
 	}
@@ -86,6 +99,153 @@ protected:
 	// Objects declared here can be used by all tests in the test case for Foo.
 
 };
+
+TEST_F(SpeedEval, Time)
+{
+	//int tries = 10000000;
+	int tries = 0;
+	std::chrono::nanoseconds total_ns(0);
+	for (int i = 0; i < tries; i++)
+	{
+		auto t0 = std::chrono::high_resolution_clock::now();
+		auto t1 = std::chrono::high_resolution_clock::now();
+		total_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0);
+	}
+
+	std::cout << " milliseconds: " << total_ns.count() / ((double)tries) << "ns\n";
+}
+
+TEST_F(SpeedEval, ConsistencyDelay)
+{
+	string name = "A";
+	uint8_t type = CaceType::CDouble;
+	acceptStrategy strategy = acceptStrategy::NoDistribution;
+	auto v1 = make_shared<ConsensusVariable>(name, strategy, std::numeric_limits<long>::max(),
+												cace1->communication->getOwnID(),
+												cace1->timeManager->getDistributedTime(),
+												cace1->timeManager->lamportTime, type);
+	auto v2 = make_shared<ConsensusVariable>(name, strategy, std::numeric_limits<long>::max(),
+												cace1->communication->getOwnID(),
+												cace1->timeManager->getDistributedTime(),
+												cace1->timeManager->lamportTime, type);
+	cace1->caceSpace->addVariable(v1, false);
+	cace2->caceSpace->addVariable(v2, false);
+	v1->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V1Time, &TimeMeasure::notifyChange));
+	v2->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V2Time, &TimeMeasure::notifyChange));
+
+	vector<uint8_t> val;
+	//val.resize(5000);
+	/*for (int i = 0; i < 8000; i++)
+	 {
+	 val.push_back(0);
+	 }*/
+	v2->setValue(val);
+	v2->setAcceptStrategy(acceptStrategy::TwoWayHandShake);
+	nanoseconds timeRemoteArrival(0);
+	nanoseconds timeFeedback(0);
+	nanoseconds total(0);
+
+	int tries = 1;
+	for (int i = 0; i < tries; i++)
+	{
+		cace2->worker->clearJobs();
+		cace1->worker->clearJobs();
+		high_resolution_clock::time_point before = high_resolution_clock::now();
+		//cace2->caceSpace->distributeVariable(v2);
+		vector<int>* all = cace2->getActiveRobots();
+		cace2->worker->appendJob(
+				new CommandJob(v2->getName(), v2, v2->getValue(), *all, cace2->timeManager->lamportTime, cace2));
+
+		//cace2->caceSpace->distributeValue(name, val, CaceType::Custom, acceptStrategy::TwoWayHandShake);
+		//cace1->step();
+		//cace2->step();
+		//cace1->step();
+		this_thread::sleep_for(chrono::milliseconds(10));
+		timeRemoteArrival += duration_cast<std::chrono::nanoseconds>(V1Time.time - before);
+		timeFeedback += duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time);
+		total += duration_cast<std::chrono::nanoseconds>(V2Time.time - before);
+	}
+	std::cout << " milliseconds: " << timeRemoteArrival.count() / ((double)tries) << "ns\n";
+	std::cout << " milliseconds: " << timeFeedback.count() / ((double)tries) << "ns\n";
+	std::cout << " milliseconds: " << total.count() / ((double)tries) << "ns\n";
+}
+
+class sender
+{
+public:
+	void handle_send_to(const boost::system::error_code& error)
+	{
+
+	}
+};
+
+TEST_F(SpeedEval, MulticastDelay)
+{
+	sender s;
+	string addr = "224.16.32.40";
+	unsigned short p1 = 1234;
+	unsigned short p2 = 1234;
+	cacemulticast::UDPSocket s1(p1);
+	/*boost::asio::ip::udp::endpoint endpoint_(boost::asio::ip::address::from_string(addr.c_str()), p1);
+	 boost::asio::io_service io_service;
+	 boost::asio::ip::udp::socket s1(io_service, endpoint_.protocol());*/
+
+	cacemulticast::UDPSocket s2(p2);
+	//s1.setMulticastTTL(1);
+	//s1.joinGroup(addr);
+	s2.setMulticastTTL(1);
+	s2.joinGroup(addr);
+
+	int size = 24;
+	char* test = new char[size];
+	char* recv = new char[size];
+	nanoseconds total_ns(0);
+	int tries = 100;
+	for (int i = 0; i < tries; i++)
+	{
+		auto t0 = std::chrono::high_resolution_clock::now();
+		s1.sendTo(test, size, addr, p2);
+		/*s1.async_send_to(
+		 boost::asio::buffer(string(test)), endpoint_,
+		 boost::bind(&sender::handle_send_to, &s,
+		 boost::asio::placeholders::error));*/
+		auto t1 = std::chrono::high_resolution_clock::now();
+		s2.recvFrom(recv, size, addr, p1);
+		total_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0);
+		std::cout << "Std. Socket nanoseconds " << i << ": " << duration_cast<std::chrono::nanoseconds>(t1 - t0).count()
+				<< "ns\n";
+		this_thread::sleep_for(chrono::milliseconds(10));
+	}
+	std::cout << "Std. Socket nanoseconds: " << total_ns.count() / ((double)tries) << "ns\n";
+	delete[] test;
+	delete[] recv;
+
+	int sockfd, n;
+	struct sockaddr_in servaddr, cliaddr;
+	char sendline[1000];
+	char recvline[1000];
+
+	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	servaddr.sin_port = htons(32000);
+
+	for (int i = 0; i < 20; i++)
+	{
+		auto t0 = std::chrono::high_resolution_clock::now();
+		sendto(sockfd, sendline, 1, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+		auto t1 = std::chrono::high_resolution_clock::now();
+		std::cout << "Std. Socket nanoseconds " << duration_cast<std::chrono::nanoseconds>(t1 - t0).count() << "ns"
+				<< endl;
+		//this_thread::sleep_for(chrono::milliseconds(100));
+	}
+	/*n = recvfrom(sockfd, recvline, 10000, 0, NULL, NULL);
+	 recvline[n] = 0;
+	 fputs(recvline, stdout);*/
+
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv)
@@ -97,5 +257,61 @@ int main(int argc, char **argv)
 	int ret = RUN_ALL_TESTS();
 	cout << "All tests Completed" << endl;
 	ros::shutdown();
+
 	return ret;
+	/*cout << "Before" << endl;
+
+	 TimeMeasure V1Time;
+	 TimeMeasure V2Time;
+
+	 Cace* cace1 = Cace::getEmulated("", 1);
+	 Cace* cace2 = Cace::getEmulated("", 2);
+	 cace1->activeRobots.push_back(2);
+	 cace1->communication->startAsynchronous();
+	 cace2->activeRobots.push_back(1);
+	 cace2->communication->startAsynchronous();
+	 this_thread::sleep_for(chrono::milliseconds(1));
+
+	 string name = "A";
+	 uint8_t type = CaceType::CDouble;
+	 acceptStrategy strategy = acceptStrategy::NoDistribution;
+	 auto v1 = make_shared<ConsensusVariable>(name, strategy, std::numeric_limits<long>::max(),
+	 cace1->communication->getOwnID(),
+	 cace1->timeManager->getDistributedTime(),
+	 cace1->timeManager->lamportTime, type);
+	 auto v2 = make_shared<ConsensusVariable>(name, strategy, std::numeric_limits<long>::max(),
+	 cace1->communication->getOwnID(),
+	 cace1->timeManager->getDistributedTime(),
+	 cace1->timeManager->lamportTime, type);
+	 cace1->caceSpace->addVariable(v1, false);
+	 cace2->caceSpace->addVariable(v2, false);
+	 v1->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V1Time, &TimeMeasure::notifyChange));
+	 v2->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V2Time, &TimeMeasure::notifyChange));
+
+	 vector<uint8_t> val={'a'};
+	 //val.resize(5000);
+	 //for (int i = 0; i < 8000; i++)
+	 // {
+	 // val.push_back(0);
+	 // }
+	 v2->setValue(val);
+	 v2->setAcceptStrategy(acceptStrategy::TwoWayHandShake);
+	 high_resolution_clock::time_point before = high_resolution_clock::now();
+	 //cace2->caceSpace->distributeVariable(v2);
+	 vector<int>* all = cace2->getActiveRobots();
+	 cace2->worker->appendJob(
+	 new CommandJob(v2->getName(), v2, v2->getValue(), *all, cace2->timeManager->lamportTime, cace2));
+
+	 //cace2->caceSpace->distributeValue(name, val, CaceType::Custom, acceptStrategy::TwoWayHandShake);
+	 //cace1->step();
+	 //cace2->step();
+	 //cace1->step();
+	 this_thread::sleep_for(chrono::milliseconds(5000));
+	 nanoseconds timeRemoteArrival = duration_cast<std::chrono::nanoseconds>(V1Time.time - before);
+	 nanoseconds timeFeedback = duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time);
+	 nanoseconds total = duration_cast<std::chrono::nanoseconds>(V2Time.time - before);
+	 std::cout << " milliseconds: " << timeRemoteArrival.count() << "ns\n";
+	 std::cout << " milliseconds: " << timeFeedback.count() << "ns\n";
+	 std::cout << " milliseconds: " << total.count() << "ns\n";
+	 return 1;*/
 }

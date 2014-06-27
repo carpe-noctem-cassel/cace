@@ -40,7 +40,7 @@ namespace cace
 		bool updatedOwnBelieve = false;
 		list<JobStateEntity> entities;
 		unsigned long lamportTime=0;
-		int maxRetrys;
+		static int maxRetrys;
 
 	protected:
 		shared_ptr<ConsensusVariable> doVariableUpdate();

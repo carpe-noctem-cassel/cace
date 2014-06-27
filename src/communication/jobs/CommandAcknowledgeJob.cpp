@@ -21,20 +21,19 @@
 
 namespace cace
 {
+	int CommandAcknowledgeJob::maxRetrys = 10;
 
 	CommandAcknowledgeJob::CommandAcknowledgeJob(string name, shared_ptr<ConsensusVariable> variable,
 													vector<int> robotids, unsigned long lamportTime, Cace* cace,
 													CaceCommandPtr cmd) :
 			AbstractCommunicationJob(name, variable, robotids, lamportTime, cace)
 	{
-		// /todo
-		//int maxRetrys = SystemConfig.LocalInstance["Cace"].GetInt("Cace.MaxCommandRetrys");
 		msgID = (short)cmd->msgID;
 		updatedOwnBelieve = true;
 		command = cmd;
-		supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
+		/*supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
 
-		maxRetrys = (*sc)["Cace"]->get<int>("Cace.MaxCommandRetrys", NULL);
+		maxRetrys = (*sc)["Cace"]->get<int>("Cace.MaxCommandRetrys", NULL);*/
 
 		if (!cace->safeStepMode)
 		{
@@ -154,7 +153,6 @@ namespace cace
 	shared_ptr<ConsensusVariable> CommandAcknowledgeJob::doVariableUpdate()
 	{
 		CVariableStore* store = cace->variableStore;
-		cv = store->getVariable(command->variableName);
 		if (store->existsVariable(command->variableName))
 		{
 			cv = store->getVariable(command->variableName);
@@ -201,8 +199,7 @@ namespace cace
 															command->type);
 			co->setValue(command->value);
 			cv->proposals.push_back(co);
-
-			cv->acceptProposals(*cace, &command->value);
+			//cv->acceptProposals(*cace, &command->value);
 			updatedOwnBelieve = true;
 			store->addVariable(cv);
 		}

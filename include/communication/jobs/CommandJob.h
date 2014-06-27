@@ -31,7 +31,7 @@ namespace cace
 
 		list<JobStateEntity> entities;
 		short msgID;
-		int maxRetrys;
+		static int maxRetrys;
 		vector<uint8_t> value;
 		int remainingRetrys=1;
 

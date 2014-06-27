@@ -7,6 +7,7 @@
 
 #include <communication/CaceCommunication.h>
 #include <communication/jobs/ShortAckJob.h>
+#include <communication/jobs/CommandAcknowledgeJob.h>
 #include <Configuration.h>
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
@@ -48,7 +49,8 @@ namespace cace
 		this->worker = worker;
 	}
 
-	void CaceCommunication::startAsynchronous() {
+	void CaceCommunication::startAsynchronous()
+	{
 	}
 
 	int CaceCommunication::getOwnID()
@@ -245,9 +247,13 @@ namespace cace
 		//0 is broadcast
 		if (cc->receiverID == 0 || cc->receiverID == ownID)
 		{
-			lock_guard<std::mutex> lock(cmdMutex);
+			//lock_guard<std::mutex> lock(cmdMutex);
 			{
-				commands.push_back(cc);
+				vector<int> nall = cace->activeRobots;
+				shared_ptr<ConsensusVariable> np;
+				worker->appendJob(
+						new CommandAcknowledgeJob(cc->variableName, np, nall, cace->timeManager->lamportTime, cace, cc));
+				//commands.push_back(cc);
 			}
 		}
 	}
@@ -294,23 +300,23 @@ namespace cace
 	}
 
 	/*list<CaceAcknowledgePtr> CaceCommunication::getAcknowledgesAndRemove(short msgID)
-	{
-		list<CaceAcknowledgePtr> ret;
-		lock_guard<std::mutex> lock(ackMutex);
-		list<CaceAcknowledgePtr>::iterator it = acknowledges.begin();
-		while (it != acknowledges.end())
-		{
-			if ((*it)->msgID == msgID)
-			{
-				ret.push_back(*it);
-				list<CaceAcknowledgePtr>::iterator tmp = it;
-				it--;
-				acknowledges.erase(tmp);
-			}
-			it++;
-		}
-		return ret;
-	}*/
+	 {
+	 list<CaceAcknowledgePtr> ret;
+	 lock_guard<std::mutex> lock(ackMutex);
+	 list<CaceAcknowledgePtr>::iterator it = acknowledges.begin();
+	 while (it != acknowledges.end())
+	 {
+	 if ((*it)->msgID == msgID)
+	 {
+	 ret.push_back(*it);
+	 list<CaceAcknowledgePtr>::iterator tmp = it;
+	 it--;
+	 acknowledges.erase(tmp);
+	 }
+	 it++;
+	 }
+	 return ret;
+	 }*/
 
 	list<CaceShortAckPtr> CaceCommunication::getWriteAcknowledgesAndRemove(short msgID)
 	{

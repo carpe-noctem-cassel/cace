@@ -45,7 +45,7 @@ namespace cace
 		ros::Time now = ros::Time::now();
 		return timeDiff + ((unsigned long)now.sec) * 1000000000ul + (unsigned long)now.nsec;
 #else
-		auto now = std::chrono::system_clock::now();
+		auto now = std::chrono::high_resolution_clock::now();
 		auto duration = now.time_since_epoch();
 		return timeDiff + std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
 #endif
@@ -57,7 +57,7 @@ namespace cace
 		ros::Time now = ros::Time::now();
 		return ((unsigned long)now.sec) * 1000000000ul + (unsigned long)now.nsec;
 #else
-		auto now = std::chrono::system_clock::now();
+		auto now = std::chrono::high_resolution_clock::now();
 		auto duration = now.time_since_epoch();
 		return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
 #endif

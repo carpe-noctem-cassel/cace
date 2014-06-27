@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp system_config message_generation)
 
 
 ## System dependencies are found with CMake's conventions
-#find_package(Boost REQUIRED COMPONENTS program_options)
+find_package(Boost REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -147,12 +147,13 @@ endif()
 catkin_add_gtest(${PROJECT_NAME}-eval ${_my_sources} test/eval/speed.cpp)
 
 if(TARGET ${PROJECT_NAME}-test)
+include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}-eval
 #${PROJECT_NAME}
-${catkin_LIBRARIES}
+${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
-set_target_properties(${PROJECT_NAME}-eval PROPERTIES LINK_FLAGS "")
-set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "")
-#set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g -DUSE_ROS")
+set_target_properties(${PROJECT_NAME}-eval PROPERTIES LINK_FLAGS "-O5")
+set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-O5  -mtune=native -lrt -ftree-vectorize -msse3 -ffast-math -O3 -funroll-loops -fomit-frame-pointer")
+#set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-O5 -DUSE_ROS")
 endif()
 # catkin_add_nosetests(test)

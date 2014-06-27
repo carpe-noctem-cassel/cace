@@ -19,6 +19,7 @@
 
 #include <communication/multicast/PracticalSocket.h>
 #include <thread>
+#include <iostream>
 #include <cstring>
 
 #ifdef WIN32
@@ -32,6 +33,8 @@ typedef char raw_type; // Type used for raw data on this platform
 #include <arpa/inet.h>       // For inet_addr()
 #include <unistd.h>          // For close()
 #include <netinet/in.h>      // For sockaddr_in
+#include <netinet/tcp.h>
+#include <netinet/ip.h>
 typedef void raw_type; // Type used for raw data on this platform
 #endif
 
@@ -71,14 +74,15 @@ namespace cacemulticast
 		memset(&addr, 0, sizeof(addr)); // Zero out address structure
 		addr.sin_family = AF_INET; // Internet address
 
-		hostent *host; // Resolve name
-		if ((host = gethostbyname(address.c_str())) == NULL)
-		{
-			// strerror() will not work for gethostbyname() and hstrerror()
-			// is supposedly obsolete
-			throw SocketException("Failed to resolve name (gethostbyname())");
-		}
-		addr.sin_addr.s_addr = *((unsigned long *)host->h_addr_list[0]);
+		/*hostent *host; // Resolve name
+		 if ((host = gethostbyname(address.c_str())) == NULL)
+		 {
+		 // strerror() will not work for gethostbyname() and hstrerror()
+		 // is supposedly obsolete
+		 throw SocketException("Failed to resolve name (gethostbyname())");
+		 }*/
+		//addr.sin_addr.s_addr = *((unsigned long *)host->h_addr_list[0]);
+		addr.sin_addr.s_addr = inet_addr(address.c_str());
 
 		addr.sin_port = htons(port); // Assign port in network byte order
 	}
@@ -159,6 +163,10 @@ namespace cacemulticast
 
 		int optval = 1;
 		setsockopt(sockDesc, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
+		int bufsize = 0;
+		setsockopt(sockDesc, SOL_SOCKET, SO_DEBUG, (char *)&bufsize, sizeof(bufsize));
+		/*int tos = 0;
+		setsockopt(sockDesc, SOL_SOCKET, SO_USELOOPBACK, &tos, sizeof(tos));*/
 
 		if (bind(sockDesc, (sockaddr *)&localAddr, sizeof(sockaddr_in)) < 0)
 		{
@@ -391,30 +399,35 @@ namespace cacemulticast
 		sockaddr_in destAddr;
 		fillAddr(foreignAddress, foreignPort, destAddr);
 
+		//auto t0 = std::chrono::high_resolution_clock::now();
+
 		// Write out the whole buffer as a single message.
 		if (sendto(sockDesc, (raw_type *)buffer, bufferLen, 0, (sockaddr *)&destAddr, sizeof(destAddr)) != bufferLen)
 		{
 			throw SocketException("Send failed (sendto())", true);
 		}
+		/*auto t1 = std::chrono::high_resolution_clock::now();
+		 auto total_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0);
+		 std::cout << "command nano: " << total_ns.count() << "ns" << std::endl;*/
 	}
 
 	int UDPSocket::recvFrom(void *buffer, int bufferLen, string &sourceAddress, unsigned short &sourcePort)
-			throw (SocketException)
+//			throw (SocketException)
 	{
 		sockaddr_in clntAddr;
 		socklen_t addrLen = sizeof(clntAddr);
-		int rtn;
-		if ((rtn = recvfrom(sockDesc, (raw_type *)buffer, bufferLen, 0, (sockaddr *)&clntAddr, (socklen_t *)&addrLen))
-				< 0)
-		{
-			return rtn;
-			//throw SocketException("Receive failed (recvfrom())", true);
-		}
-		/* This is only to ensure the data origin
-		 * sourceAddress = inet_ntoa(clntAddr.sin_addr);
-		 sourcePort = ntohs(clntAddr.sin_port);*/
+		//int rtn;
+		return recvfrom(sockDesc, (raw_type *)buffer, bufferLen, 0, (sockaddr *)&clntAddr, (socklen_t *)&addrLen);
+		/*				< 0)
+		 {
+		 return rtn;
+		 //throw SocketException("Receive failed (recvfrom())", true);
+		 }
+		 // This is only to ensure the data origin
+		 // sourceAddress = inet_ntoa(clntAddr.sin_addr);
+		 //sourcePort = ntohs(clntAddr.sin_port);
 
-		return rtn;
+		 return rtn;*/
 	}
 
 	void UDPSocket::setMulticastTTL(unsigned char multicastTTL) throw (SocketException)

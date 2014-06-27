@@ -43,7 +43,7 @@ namespace cace
 
 		shared_ptr<ConsensusVariable> getVariable(string& name);
 		bool addVariable(shared_ptr<ConsensusVariable> var, bool distribute);
-		void distributeVariable(shared_ptr<ConsensusVariable> var);
+		void distributeVariable(shared_ptr<ConsensusVariable>& var);
 
 	protected:
 		CVariableStore* store;

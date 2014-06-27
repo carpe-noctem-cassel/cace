@@ -311,7 +311,7 @@ public:
    *   @exception SocketException thrown if unable to receive datagram
    */
   int recvFrom(void *buffer, int bufferLen, string &sourceAddress, 
-               unsigned short &sourcePort) throw(SocketException);
+               unsigned short &sourcePort);// throw(SocketException);
 
   /**
    *   Set the multicast TTL

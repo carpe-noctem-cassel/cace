@@ -17,6 +17,7 @@
 
 namespace cace
 {
+	int CommandJob::maxRetrys = 10;
 
 	CommandJob::CommandJob(string name, shared_ptr<ConsensusVariable> variable, vector<uint8_t> value,
 							vector<int> robotids, unsigned long lamportTime, Cace* cace) :
@@ -25,10 +26,9 @@ namespace cace
 		//trying to produce a uniq msg id
 		msgID = (short)((int)(cace->timeManager->lamportTime + 100) * caceCommunication->getOwnID());
 
+		/*supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
 
-		supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
-
-		maxRetrys = (*sc)["Cace"]->get<int>("Cace.MaxCommandRetrys", NULL);
+		 maxRetrys = (*sc)["Cace"]->get<int>("Cace.MaxCommandRetrys", NULL);*/
 
 		if (variable->getAcceptStrategy() > acceptStrategy::NoDistribution)
 		{
