@@ -37,7 +37,7 @@ namespace cace
 		}
 	}
 
-	ctime AgentCommunicationModel::getEstimatedTimeDifference()
+	long AgentCommunicationModel::getEstimatedTimeDifference()
 	{
 		long ret = 0;
 		ctime delay = getMaxLikelihoodDelay();
@@ -45,8 +45,10 @@ namespace cace
 		for (it = data.begin(); it != data.end(); it++)
 		{
 			ret += ((long)((*it)->localTime + delay)) - ((long)(*it)->localMessageArrivalTime);
+			//cout << ((long)((*it)->localTime + delay)) - ((long)(*it)->localMessageArrivalTime);
 		}
-		return ret / (ctime)data.size();
+		//cout << endl;
+		return ret / (long)data.size();
 	}
 
 	ctime AgentCommunicationModel::getMaxLikelihoodDelay()
@@ -64,8 +66,10 @@ namespace cace
 		for (it = data.begin(); it != data.end(); it++)
 		{
 			ctime delay = (ctime)abs(((long)(*it)->distributedMessageArrivalTime) - ((long)(*it)->distributedTime));
+			//cout << delay << "\t";
 			m += ((long)delay) / num;
 		}
+		//cout << endl;
 		return (ctime)m;
 	}
 

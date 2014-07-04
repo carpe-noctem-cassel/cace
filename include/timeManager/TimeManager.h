@@ -33,21 +33,76 @@ namespace cace
 		TimeManager(CaceCommunication* com);
 		virtual ~TimeManager();
 
+		/*!
+		 * Synchronized Time
+		 */
 		unsigned long getDistributedTime();
+
+		/*!
+		 * Local Cace Time
+		 */
 		unsigned long getLocalTime();
+
+		/*!
+		 * Time difference between local time and distributed time
+		 * should not be changed manually!
+		 */
 		long timeDiff;
+
+		/*!
+		 * Indicates the max time before resending a command
+		 */
 		unsigned long maxResendTime;
+
+		/*!
+		 * Indicates the min time before resending a command
+		 */
 		unsigned long minResendTime;
+
+		/*!
+		 * Indicates the max time before resending a command
+		 */
 		double resendArrivalPropability;
+
+		/*!
+		 * Local Lamport Time
+		 */
 		unsigned long lamportTime;
 
+		/*!
+		 * called whenever a new message is received to update the current lamport time
+		 */
 		void updateLamportTime(unsigned long seenTime);
+
+		/*!
+		 * Timemanager Iteration
+		 */
 		void step();
+
+		/*!
+		 * Returns a estimation for resendtimes for 'agentID' in ms
+		 */
 		unsigned long getEstimatedResendTime(int agentID);
+
+		/*!
+		 * Returns a estimation for packet loss to 'agentID'
+		 */
 		double getEstimatedPacketLoss(int agentID);
+
+		/*!
+		 * Returns a probability estimation for consensus
+		 * depends on target 'agentID' and time since the last job has been startet
+		 */
 		double getPropabilityforConsensus(int agentID, unsigned long jobStart);
+
+		/*!
+		 * Returns the current communication delay estimation to 'agentID'
+		 */
 		unsigned long getAgentCommunicationDelay(int agentID);
 
+		/*!
+		 * Adds a new Timemessage
+		 */
 		void addTimeMessage(CaceTimePtr ct, unsigned long receivedTime);
 
 		string toString();

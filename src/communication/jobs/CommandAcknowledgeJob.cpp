@@ -61,7 +61,6 @@ namespace cace
 
 	CommandAcknowledgeJob::~CommandAcknowledgeJob()
 	{
-		// TODO Auto-generated destructor stub
 	}
 
 	string CommandAcknowledgeJob::toString()
@@ -153,6 +152,7 @@ namespace cace
 	shared_ptr<ConsensusVariable> CommandAcknowledgeJob::doVariableUpdate()
 	{
 		CVariableStore* store = cace->variableStore;
+		cv = store->getVariable(command->variableName);
 		if (store->existsVariable(command->variableName))
 		{
 			cv = store->getVariable(command->variableName);
@@ -199,7 +199,7 @@ namespace cace
 															command->type);
 			co->setValue(command->value);
 			cv->proposals.push_back(co);
-			//cv->acceptProposals(*cace, &command->value);
+			cv->acceptProposals(*cace, &command->value);
 			updatedOwnBelieve = true;
 			store->addVariable(cv);
 		}

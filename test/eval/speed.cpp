@@ -37,18 +37,82 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <thread>
+
+const int tries = 1;
 
 using namespace cace;
 using namespace std;
 using namespace std::chrono;
 
+class IncrementalEstimator
+{
+public:
+	double n;
+	double mean;
+	double m2;
+	double min;
+	double max;
+	IncrementalEstimator()
+	{
+		clear();
+	}
+
+	void addData(double x)
+	{
+		if (x > max)
+		{
+			max = x;
+		}
+		if (x < min)
+		{
+			min = x;
+		}
+
+		n = n + 1.0;
+		double delta = x - mean;
+		mean = mean + delta / n;
+		m2 = m2 + delta * (x - mean);
+	}
+
+	double getVariance()
+	{
+		if (n < 2)
+		{
+			return 0;
+		}
+		return m2 / (n - 1.0);
+	}
+
+	void clear()
+	{
+		n = 0;
+		mean = 0;
+		m2 = 0;
+		min = numeric_limits<double>::max();
+		max = numeric_limits<double>::min();
+	}
+
+	string toString()
+	{
+		return "m: " + to_string(mean) + "\tv: " + to_string(getVariance()) + "\tcount: " + to_string(n) + "\tmin: "
+				+ to_string(min) + "\tmax: " + to_string(max);
+	}
+
+};
+
 class TimeMeasure
 {
 public:
+	bool first = true;
 	high_resolution_clock::time_point time;
 	void notifyChange(ConsensusVariable* v)
 	{
-		time = high_resolution_clock::now();
+		if (first)
+		{
+			time = high_resolution_clock::now();
+			first = false;
+		}
 	}
 };
 
@@ -56,14 +120,30 @@ class SpeedEval : public ::testing::Test
 {
 public:
 	TimeMeasure V1Time;
-	TimeMeasure V2Time;
+	TimeMeasure V2Time;bool run;
+
+	void thread()
+	{
+		string addr = "224.16.32.40";
+		int size = 24;
+		char* test = new char[size];
+		while (run)
+		{
+			sback.sendTo(test, 1, addr, 1235);
+			//cout << "." << endl;
+		}
+	}
 
 protected:
+	std::thread* t;
+	cacemulticast::UDPSocket sback;
 	Cace* cace1 = nullptr;
 	Cace* cace2 = nullptr;
 
-	SpeedEval()
+	SpeedEval() :
+			sback(1234)
 	{
+		run = false;
 		// You can do set-up work for each test here.
 	}
 
@@ -72,8 +152,8 @@ protected:
 		// You can do clean-up work that doesn't throw exceptions here.
 	}
 
-	// If the constructor and destructor are not enough for setting up
-	// and cleaning up each test, you can define the following methods:
+// If the constructor and destructor are not enough for setting up
+// and cleaning up each test, you can define the following methods:
 
 	virtual void SetUp()
 	{
@@ -86,24 +166,30 @@ protected:
 		this_thread::sleep_for(chrono::milliseconds(1));
 		// Code here will be called immediately after the constructor (right
 		// before each test).
+		run = true;
+		//t = new std::thread(&SpeedEval::thread, this);
 	}
 
 	virtual void TearDown()
 	{
+		run = false;
+		//t->join();
+		//delete t;
+
 		delete cace1;
 		delete cace2;
 		// Code here will be called immediately after each test (right
 		// before the destructor).
 	}
 
-	// Objects declared here can be used by all tests in the test case for Foo.
+// Objects declared here can be used by all tests in the test case for Foo.
 
 };
 
 TEST_F(SpeedEval, Time)
 {
-	//int tries = 10000000;
-	int tries = 0;
+//int tries = 10000000;
+	int tries = 1000000;
 	std::chrono::nanoseconds total_ns(0);
 	for (int i = 0; i < tries; i++)
 	{
@@ -118,7 +204,7 @@ TEST_F(SpeedEval, Time)
 TEST_F(SpeedEval, ConsistencyDelay)
 {
 	string name = "A";
-	uint8_t type = CaceType::CDouble;
+	uint8_t type = CaceType::Custom;
 	acceptStrategy strategy = acceptStrategy::NoDistribution;
 	auto v1 = make_shared<ConsensusVariable>(name, strategy, std::numeric_limits<long>::max(),
 												cace1->communication->getOwnID(),
@@ -133,41 +219,71 @@ TEST_F(SpeedEval, ConsistencyDelay)
 	v1->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V1Time, &TimeMeasure::notifyChange));
 	v2->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V2Time, &TimeMeasure::notifyChange));
 
-	vector<uint8_t> val;
-	//val.resize(5000);
+//	vector<uint8_t> val;
+//val.resize(5000);
 	/*for (int i = 0; i < 8000; i++)
 	 {
 	 val.push_back(0);
 	 }*/
-	v2->setValue(val);
+//	v2->setValue(val);
 	v2->setAcceptStrategy(acceptStrategy::TwoWayHandShake);
 	nanoseconds timeRemoteArrival(0);
 	nanoseconds timeFeedback(0);
 	nanoseconds total(0);
+	IncrementalEstimator arrival;
+	IncrementalEstimator feedback;
+	IncrementalEstimator consensus;
 
-	int tries = 1;
-	for (int i = 0; i < tries; i++)
+	for (int curSize = 0; curSize < 65536; curSize += 200)
 	{
-		cace2->worker->clearJobs();
-		cace1->worker->clearJobs();
-		high_resolution_clock::time_point before = high_resolution_clock::now();
-		//cace2->caceSpace->distributeVariable(v2);
-		vector<int>* all = cace2->getActiveRobots();
-		cace2->worker->appendJob(
-				new CommandJob(v2->getName(), v2, v2->getValue(), *all, cace2->timeManager->lamportTime, cace2));
+		vector<uint8_t> val(curSize);
+		v2->setValue(val);
+		arrival.clear();
+		feedback.clear();
+		consensus.clear();
+		for (int i = 0; i < tries; i++)
+		{
+			V1Time.first = true;
+			V2Time.first = true;
+			cace2->worker->clearJobs();
+			cace1->worker->clearJobs();
+			//val.resize(curSize);
+			//v2->setValue(val);
+			high_resolution_clock::time_point before = high_resolution_clock::now();
+			cace2->caceSpace->distributeVariable(v2);
+			//cace2->caceSpace->distributeValue(name, val, CaceType::Custom, acceptStrategy::TwoWayHandShake);
+			for (int n = 0; n < 5; n++)
+			{
+				cace1->step();
+				cace2->step();
+			}
+			this_thread::sleep_for(chrono::milliseconds(250));
+			//timeRemoteArrival += duration_cast<std::chrono::nanoseconds>(V1Time.time - before);
+			/*if ((duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() > 0
+					&& duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count() > 0
+					&& duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count() > 0)
+					&& (duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() < 400000
+							&& duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count() < 400000
+							&& duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count() < 400000))
+			{*/
 
-		//cace2->caceSpace->distributeValue(name, val, CaceType::Custom, acceptStrategy::TwoWayHandShake);
-		//cace1->step();
-		//cace2->step();
-		//cace1->step();
-		this_thread::sleep_for(chrono::milliseconds(10));
-		timeRemoteArrival += duration_cast<std::chrono::nanoseconds>(V1Time.time - before);
-		timeFeedback += duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time);
-		total += duration_cast<std::chrono::nanoseconds>(V2Time.time - before);
+				arrival.addData(duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count());
+				//timeFeedback += duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time);
+				feedback.addData(duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count());
+				//total += duration_cast<std::chrono::nanoseconds>(V2Time.time - before);
+				consensus.addData(duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count());
+				//cout << duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() << endl;
+			/*}
+			else
+			{
+				cout << "#Lost Packet" << endl;
+				i--;
+			}*/
+		}
+		std::cout << "Cace - Size: " << curSize << "\tArrival\t" << arrival.toString() << " ns\t";
+		std::cout << "Feedback: " << feedback.toString() << " ns\t";
+		std::cout << "Consensus: " << consensus.toString() << " ns\t" << endl;
 	}
-	std::cout << " milliseconds: " << timeRemoteArrival.count() / ((double)tries) << "ns\n";
-	std::cout << " milliseconds: " << timeFeedback.count() / ((double)tries) << "ns\n";
-	std::cout << " milliseconds: " << total.count() / ((double)tries) << "ns\n";
 }
 
 class sender
@@ -186,65 +302,65 @@ TEST_F(SpeedEval, MulticastDelay)
 	unsigned short p1 = 1234;
 	unsigned short p2 = 1234;
 	cacemulticast::UDPSocket s1(p1);
-	/*boost::asio::ip::udp::endpoint endpoint_(boost::asio::ip::address::from_string(addr.c_str()), p1);
-	 boost::asio::io_service io_service;
-	 boost::asio::ip::udp::socket s1(io_service, endpoint_.protocol());*/
-
 	cacemulticast::UDPSocket s2(p2);
-	//s1.setMulticastTTL(1);
-	//s1.joinGroup(addr);
+	s1.setMulticastTTL(1);
+	s1.joinGroup(addr);
 	s2.setMulticastTTL(1);
 	s2.joinGroup(addr);
 
-	int size = 24;
+	int size = 100000;
 	char* test = new char[size];
 	char* recv = new char[size];
 	nanoseconds total_ns(0);
-	int tries = 100;
-	for (int i = 0; i < tries; i++)
+	//int tries = 1000;
+	IncrementalEstimator ie;
+
+	for (int curSize = 0; curSize < 65536; curSize += 200)
 	{
-		auto t0 = std::chrono::high_resolution_clock::now();
-		s1.sendTo(test, size, addr, p2);
-		/*s1.async_send_to(
-		 boost::asio::buffer(string(test)), endpoint_,
-		 boost::bind(&sender::handle_send_to, &s,
-		 boost::asio::placeholders::error));*/
-		auto t1 = std::chrono::high_resolution_clock::now();
-		s2.recvFrom(recv, size, addr, p1);
-		total_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0);
-		std::cout << "Std. Socket nanoseconds " << i << ": " << duration_cast<std::chrono::nanoseconds>(t1 - t0).count()
-				<< "ns\n";
-		this_thread::sleep_for(chrono::milliseconds(10));
+		ie.clear();
+		for (int i = 0; i < tries; i++)
+		{
+			auto t0 = std::chrono::high_resolution_clock::now();
+			s1.sendTo(test, curSize, addr, p2);
+			s2.recvFrom(recv, curSize, addr, p1);
+			auto t1 = std::chrono::high_resolution_clock::now();
+
+			if (std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count() > 0)
+			{
+				ie.addData(std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count());
+			}
+			this_thread::sleep_for(chrono::milliseconds(10));
+		}
+		std::cout << "Std. Socket - Size: " << curSize << "\t" << ie.toString() << " ns" << endl;
 	}
-	std::cout << "Std. Socket nanoseconds: " << total_ns.count() / ((double)tries) << "ns\n";
 	delete[] test;
 	delete[] recv;
 
-	int sockfd, n;
-	struct sockaddr_in servaddr, cliaddr;
-	char sendline[1000];
-	char recvline[1000];
+	/*	int sockfd, n;
+	 struct sockaddr_in servaddr, cliaddr;
+	 char sendline[1000];
+	 char recvline[1000];
 
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	 sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-	bzero(&servaddr, sizeof(servaddr));
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	servaddr.sin_port = htons(32000);
+	 bzero(&servaddr, sizeof(servaddr));
+	 servaddr.sin_family = AF_INET;
+	 servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	 servaddr.sin_port = htons(32000);
 
-	for (int i = 0; i < 20; i++)
-	{
-		auto t0 = std::chrono::high_resolution_clock::now();
-		sendto(sockfd, sendline, 1, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
-		auto t1 = std::chrono::high_resolution_clock::now();
-		std::cout << "Std. Socket nanoseconds " << duration_cast<std::chrono::nanoseconds>(t1 - t0).count() << "ns"
-				<< endl;
-		//this_thread::sleep_for(chrono::milliseconds(100));
-	}
-	/*n = recvfrom(sockfd, recvline, 10000, 0, NULL, NULL);
+	 for (int i = 0; i < 20; i++)
+	 {
+	 auto t0 = std::chrono::high_resolution_clock::now();
+	 sendto(sockfd, sendline, 1, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+	 auto t1 = std::chrono::high_resolution_clock::now();
+	 std::cout << "Std. Socket nanoseconds " << duration_cast<std::chrono::nanoseconds>(t1 - t0).count() << "ns"
+	 << endl;
+	 //this_thread::sleep_for(chrono::milliseconds(100));
+	 }
+	 /*n = recvfrom(sockfd, recvline, 10000, 0, NULL, NULL);
 	 recvline[n] = 0;
-	 fputs(recvline, stdout);*/
-
+	 fputs(recvline, stdout);
+	 */
 }
 
 // Run all the tests that were declared with TEST()

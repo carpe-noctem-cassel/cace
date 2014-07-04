@@ -251,9 +251,9 @@ namespace cace
 			{
 				vector<int> nall = cace->activeRobots;
 				shared_ptr<ConsensusVariable> np;
-				worker->appendJob(
-						new CommandAcknowledgeJob(cc->variableName, np, nall, cace->timeManager->lamportTime, cace, cc));
-				//commands.push_back(cc);
+				//worker->appendJob(
+				//		new CommandAcknowledgeJob(cc->variableName, np, nall, cace->timeManager->lamportTime, cace, cc));
+				commands.push_back(cc);
 			}
 		}
 	}
@@ -290,12 +290,12 @@ namespace cace
 		{
 			shared_ptr<ConsensusVariable> ptr;
 			vector<int> empty;
-			//Worker.AppendJob(new ShortAckJob(ca.VariableName, null, null, cace.TimeManager.LamportTime, cace, ca));
+			lock_guard<std::mutex> lock(ackMutex);
+			acknowledges.push_back(ca);
+
 			worker->appendJob(
 					(AbstractCommunicationJob*)new ShortAckJob(ca->variableName, ptr, empty,
 																cace->timeManager->lamportTime, cace, ca));
-			//lock_guard<std::mutex> lock(ackMutex);
-			//acknowledges.push_back(ca);
 		}
 	}
 
@@ -420,6 +420,19 @@ namespace cace
 		}
 		cace->timeManager->updateLamportTime(ct->lamportTime);
 		cace->timeManager->addTimeMessage(ct, current);
+
+		bool found = false;
+		for (int i : cace->activeRobots)
+		{
+			if (i == ct->senderID)
+			{
+				found = true;
+			}
+		}
+		if (!found)
+		{
+			cace->agentEngangement(ct->senderID, true);
+		}
 	}
 
 	list<CaceShortAckPtr> CaceCommunication::getCaceShortAcksAndRemove(short msgID)

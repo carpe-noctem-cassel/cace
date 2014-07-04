@@ -167,10 +167,10 @@ namespace cace
 		list<CaceCommandPtr> commands = communication->getCommands();
 		for (CaceCommandPtr cc : commands)
 		{
-			/*vector<int> nall = activeRobots;
+			vector<int> nall = activeRobots;
 			shared_ptr<ConsensusVariable> np;
 			worker->appendJob(
-					new CommandAcknowledgeJob(cc->variableName, np, nall, timeManager->lamportTime, this, cc));*/
+					new CommandAcknowledgeJob(cc->variableName, np, nall, timeManager->lamportTime, this, cc));
 		}
 
 		//believe notifcations

@@ -146,7 +146,14 @@ namespace cace
 	void ConsensusVariable::setValue(vector<uint8_t> value)
 	{
 		val = value;
-		hasValue = true;
+		if (value.size() > 0)
+		{
+			hasValue = true;
+		}
+		else
+		{
+			hasValue = false;
+		}
 	}
 
 	string& ConsensusVariable::getName()
@@ -372,62 +379,62 @@ namespace cace
 			getValue(s);
 			return s;
 		}
-		/* else if (Type == RosCS.ConsensusEngine.CaceType.CPoint2)
-		 {
-		 double x = BitConverter.ToDouble(Value.ToArray(), 0);
-		 double y = BitConverter.ToDouble(Value.ToArray(), sizeof(double));
-		 return "(" + x + "," + y + ")";
-		 }
-		 else if (Type == RosCS.ConsensusEngine.CaceType.CIntList)
-		 {
-		 List<int> l = null;
-		 this.GetValue(out l);
-		 string ret = "il(";
-		 if (l.Count > 0)
-		 {
-		 for (int i = 0; i < l.Count - 1; i++)
-		 {
-		 ret += l[i] + "-";
-		 }
-		 ret += l[l.Count - 1];
-		 }
-		 ret += ")";
-		 return ret;
-		 }
-		 else if (Type == RosCS.ConsensusEngine.CaceType.CDoubleList)
-		 {
-		 List<double> l = null;
-		 this.GetValue(out l);
-		 string ret = "dl(";
-		 if (l.Count > 0)
-		 {
-		 for (int i = 0; i < l.Count - 1; i++)
-		 {
-		 ret += l[i] + "-";
-		 }
-		 ret += l[l.Count - 1];
-		 }
-		 ret += ")";
-		 return ret;
-		 }
-		 else if (Type == RosCS.ConsensusEngine.CaceType.CStringList)
-		 {
-		 List<string> l = null;
-		 this.GetValue(out l);
-		 string ret = "sl(";
-		 if (l.Count > 0)
-		 {
-		 for (int i = 0; i < l.Count - 1; i++)
-		 {
-		 ret += l[i] + "-";
-		 }
-		 ret += l[l.Count - 1];
-		 }
-		 ret += ")";
-		 return ret;
-		 }
-		 return Value.ToString();*/
-		return " ";
+		else if (type == CaceType::CIntList)
+		{
+			vector<int> l;
+			if (getValue(l))
+			{
+				string ret = "il(";
+				if (l.size() > 0)
+				{
+					for (int i = 0; i < l.size() - 1; i++)
+					{
+						ret += to_string(l[i]) + "|";
+					}
+					ret += to_string(l[l.size() - 1]);
+				}
+				ret += ")";
+				return ret;
+			}
+		}
+		else if (type == CaceType::CDoubleList)
+		{
+			vector<double> l;
+			if (getValue(l))
+			{
+				string ret = "dl(";
+				if (l.size() > 0)
+				{
+					for (int i = 0; i < l.size() - 1; i++)
+					{
+						ret += to_string(l[i]) + "|";
+					}
+					ret += to_string(l[l.size() - 1]);
+				}
+				ret += ")";
+				return ret;
+			}
+		}
+		else if (type == CaceType::CStringList)
+		{
+			vector<string> l;
+			if (getValue(l))
+			{
+				string ret = "sl(";
+				if (l.size() > 0)
+				{
+					for (int i = 0; i < l.size() - 1; i++)
+					{
+						ret += l[i] + "|";
+					}
+					ret += l[l.size() - 1];
+				}
+				ret += ")";
+				return ret;
+			}
+		}
+
+		return " [No Conversion] ";
 	}
 
 	string ConsensusVariable::toString()
@@ -504,6 +511,7 @@ namespace cace
 	{
 		val.clear();
 		serialize(*in, val);
+		hasValue = true;
 		type = CaceType::CString;
 	}
 
@@ -520,6 +528,7 @@ namespace cace
 	{
 		val.clear();
 		serialize(*in, val);
+		hasValue = true;
 		type = CaceType::CDoubleList;
 	}
 
@@ -536,6 +545,7 @@ namespace cace
 	{
 		val.clear();
 		serialize(*in, val);
+		hasValue = true;
 		type = CaceType::CIntList;
 	}
 
@@ -552,12 +562,14 @@ namespace cace
 	{
 		val.clear();
 		serialize(*in, val);
+		hasValue = true;
 		type = CaceType::CStringList;
 	}
 
 	void ConsensusVariable::notify()
 	{
-		for(auto func : changeNotify) {
+		for (auto func : changeNotify)
+		{
 			func(this);
 		}
 	}

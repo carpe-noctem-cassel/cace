@@ -47,7 +47,7 @@ namespace cace
 #else
 		auto now = std::chrono::high_resolution_clock::now();
 		auto duration = now.time_since_epoch();
-		return timeDiff + std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+		return timeDiff + std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();// + 1000000*com->getOwnID();
 #endif
 	}
 
@@ -59,7 +59,7 @@ namespace cace
 #else
 		auto now = std::chrono::high_resolution_clock::now();
 		auto duration = now.time_since_epoch();
-		return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();// + 1000000*com->getOwnID();
 #endif
 	}
 
@@ -135,7 +135,9 @@ namespace cace
 		lock_guard<std::mutex> lock(this->modelMutex);
 		//cout << "please implement this! (TimeManager.cpp:AddTimeMessage)" << endl;
 		AgentTimeData* agt = new AgentTimeData(ct->localtime, ct->distributedTime,
-												(ulong)((long)receivedTime + timeDiff), receivedTime, ct->senderID);
+												(ctime)((long)receivedTime + timeDiff), receivedTime, ct->senderID);
+
+
 
 		if (agentModels.find(ct->senderID) == agentModels.end())
 		{
@@ -148,12 +150,18 @@ namespace cace
 		ctime mu = model->getMaxLikelihoodDelay();
 		//Console.WriteLine("Sender: "+ct.SenderID+" mu:" + mu +" b: "+model.GetMaxLikelihoodDelayVariance(mu) + " P(L): "+model.GetProbabilityForPacketLoss() + " DataCount: "+model.Data.Count);
 
+		//cout << ct->localtime << "\t" << ct->distributedTime << "\t" << receivedTime << "\t" << timeDiff << "\t"<< mu << endl;
+
 		long diffSum = 0;
+		long count = 0;
 		for (it = agentModels.begin(); it != agentModels.end(); it++)
 		{
-			diffSum += (long)it->second.getEstimatedTimeDifference();
+			if(it->second.data.size() > 1) {
+				diffSum += (long)it->second.getEstimatedTimeDifference();
+				count++;
+			}
 		}
-		timeDiff += (diffSum / (agentModels.size() + 1) - timeDiff) / 3;
+		timeDiff += ((diffSum / (count + 1)) - timeDiff) / 3;
 
 	}
 

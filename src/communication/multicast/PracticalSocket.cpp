@@ -165,8 +165,10 @@ namespace cacemulticast
 		setsockopt(sockDesc, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
 		int bufsize = 0;
 		setsockopt(sockDesc, SOL_SOCKET, SO_DEBUG, (char *)&bufsize, sizeof(bufsize));
-		/*int tos = 0;
-		setsockopt(sockDesc, SOL_SOCKET, SO_USELOOPBACK, &tos, sizeof(tos));*/
+		int tos = IPTOS_LOWDELAY;
+		setsockopt(sockDesc, IPPROTO_IP, IP_TOS, &tos, sizeof(tos));
+		int prio = 0;
+		setsockopt(sockDesc, SOL_SOCKET, SO_PRIORITY, &tos, sizeof(tos));
 
 		if (bind(sockDesc, (sockaddr *)&localAddr, sizeof(sockaddr_in)) < 0)
 		{

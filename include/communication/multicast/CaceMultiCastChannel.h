@@ -14,7 +14,8 @@
 
 using namespace std;
 
-#define MAX_PACKETSIZE 8192
+//#define MAX_PACKETSIZE 8192
+#define MAX_PACKETSIZE 100000
 
 namespace cacemulticast
 {

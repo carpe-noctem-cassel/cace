@@ -24,13 +24,10 @@ namespace cace
 
 	CaceCommunicationRos::CaceCommunicationRos()
 	{
-		// TODO Auto-generated constructor stub
-
 	}
 
 	CaceCommunicationRos::~CaceCommunicationRos()
 	{
-		// TODO Auto-generated destructor stub
 	}
 
 	CaceCommunicationRos::CaceCommunicationRos(CommunicationWorker* worker, string& nodePrefix, Cace* cace)

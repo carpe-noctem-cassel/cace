@@ -200,7 +200,9 @@ namespace cace
 			}
 			else
 			{
-				cout << "Cannot distribute Variables, when a variable with the same key already exists." << endl;
+				inStoreVar->update(*var);
+				var = inStoreVar;
+				//cout << "Cannot distribute Variables, when a variable with the same key already exists." << endl;
 			}
 		}
 		else

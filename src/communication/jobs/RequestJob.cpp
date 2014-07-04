@@ -45,7 +45,6 @@ namespace cace
 
 	RequestJob::~RequestJob()
 	{
-		// TODO Auto-generated destructor stub
 	}
 
 	string RequestJob::toString()

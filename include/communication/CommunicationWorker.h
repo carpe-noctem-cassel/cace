@@ -31,11 +31,33 @@ namespace cace
 		virtual ~CommunicationWorker();
 
 		list<int> agentsToRemove;
+
+		/*!
+		 * Add a new Job to task queue
+		 */
 		void appendJob(AbstractCommunicationJob* j);
+
+		/*!
+		 * Returns number of active jobs
+		 */
 		int count();
+
+		/*!
+		 * Clears all Jobs
+		 */
 		void clearJobs();
+
+		/*!
+		 * Returns the oldes job related to the given variable name that requires confirmation
+		 * Note Type Depends on variable consensuslevel
+		 */
 		AbstractCommunicationJob* getNewestVariableJob(string name, acceptStrategy strategy);
+
+		/*!
+		 * Processes all Jobs
+		 */
 		void processJobs();
+
 		string toString();
 		string toStringNoNewLine();
 	protected:

@@ -7,6 +7,7 @@
 
 #include <cace.h>
 #include <caceSpace.h>
+#include <communication/CaceCommunication.h>
 #include <communication/CommunicationWorker.h>
 #include <CaceTypes.h>
 #include <ros/init.h>
@@ -40,6 +41,25 @@ public:
 	{
 		cace = Cace::getEmulated("", 0, quiet);
 		cace->run();
+	}
+
+	int checkType(string& val)
+	{
+		stringstream ss(val);
+		int ival;
+		ss >> ival;
+		if (!ss.fail() && val.find(".") != string::npos)
+		{
+			return CaceType::CDouble;
+		}
+		else if (!ss.fail())
+		{
+			return CaceType::CInt;
+		}
+		else
+		{
+			return CaceType::CString;
+		}
 	}
 
 	vector<string> split(const string& str, int delimiter(int) = ::isspace)
@@ -95,77 +115,65 @@ public:
 					cmds >> s;
 					string name = ctxt.substr(1, ctxt.length() - 1) + s;
 
-					string firstVal;
-					cmds >> firstVal;
+					vector<string> cmdVector;
+					while (!cmds.fail())
+					{
+						string next;
+						cmds >> next;
+						cmdVector.push_back(next);
+					}
+
+					auto v1 = make_shared<ConsensusVariable>(name, level, std::numeric_limits<long>::max(),
+																cace->communication->getOwnID(),
+																cace->timeManager->getDistributedTime(),
+																cace->timeManager->lamportTime, CaceType::Custom);
+
 					if (numberOfWords == 3)
 					{
-
 						//distinguish all non list types:
-						if (firstVal.find(".") != string::npos)
+						if (checkType(cmdVector.at(0)) == CaceType::CDouble)
 						{
-							cout << "CMD " << name << "\t" << stod(firstVal) << "d" << endl;
-							cace->caceSpace->distributeValue(name, stod(firstVal), level);
+							v1->setValue(stod(cmdVector.at(0)));
 						}
-						/*						else if (Int32.TryParse(cmds[2], out temp))
-						 {
-						 Console.WriteLine("CMD " + cmds[1] + "\t" + temp + "i");
-						 cace.CaceSpace.DistributeValue(cmds[1], temp, level);
-						 }
-						 else if (cmds[2].Split(new char[] {','}, StringSplitOptions.None).Length == 2)
-						 {
-						 string[] p = cmds[2].Split(new char[]
-						 {	','}, StringSplitOptions.None);
-						 Console.WriteLine("CMD " + cmds[1] + "\t(" + p[0] + "," + p[1] + ")");
-						 cace.CaceSpace.DistributeValue(cmds[1], double.Parse(p[0]), double.Parse(p[1]), level);
-						 */
-
+						else if (checkType(cmdVector.at(0)) == CaceType::CInt)
+						{
+							v1->setValue(stoi(cmdVector.at(0)));
+						}
 						else
 						{
-							cout << "CMD " << name << "\t" << firstVal << endl;
-							//cace->caceSpace->distributeValue(name, firstVal, level);
+							v1->setValue(&cmdVector.at(0));
 						}
 					}
 
-					/*if (cmds.Length > 3)
-					 {
-					 //distinguish all list types by the first value:
-					 if (cmds[2].Contains("."))
-					 {
-					 List<double> dlist = new List<double>();
-					 Console.Write("CMD " + cmds[1]);
-					 for (int i = 2; i < cmds.Length; i++)
-					 {
-					 dlist.Add(double.Parse(cmds[i]));
-					 Console.Write("\t" + Double.Parse(cmds[i]) + "d");
-					 }
-					 Console.WriteLine();
-					 cace.CaceSpace.DistributeValue(cmds[1], dlist, level);
-					 }
-					 else if (Int32.TryParse(cmds[2], out temp))
-					 {
-					 List<int> dlist = new List<int>();
-					 Console.Write("CMD " + cmds[1]);
-					 for (int i = 2; i < cmds.Length; i++)
-					 {
-					 dlist.Add(Int32.Parse(cmds[i]));
-					 Console.Write("\t" + Int32.Parse(cmds[i]) + "i");
-					 }
-					 Console.WriteLine();
-					 cace.CaceSpace.DistributeValue(cmds[1], dlist, level);
-					 }
-					 else
-					 {
-					 List<string> dlist = new List<string>();
-					 Console.Write("CMD " + cmds[1]);
-					 for (int i = 2; i < cmds.Length; i++)
-					 {
-					 dlist.Add(cmds[i]);
-					 Console.Write("\t" + cmds[i]);
-					 }
-					 Console.WriteLine();
-					 cace.CaceSpace.DistributeValue(cmds[1], dlist, level);
-					 }
-					 }*/
+					cmdVector.pop_back();
+					if (numberOfWords > 3)
+					{
+						//distinguish all list types by the first value:
+						if (checkType(cmdVector[0]) == CaceType::CDouble)
+						{
+							vector<double> list;
+							for (string s : cmdVector)
+							{
+								list.push_back(stod(s));
+							}
+							v1->setValue(&list);
+						}
+						else if (checkType(cmdVector[0]) == CaceType::CInt)
+						{
+							vector<int> list;
+							for (string s : cmdVector)
+							{
+								list.push_back(stoi(s));
+							}
+							v1->setValue(&list);
+						}
+						else
+						{
+							v1->setValue(&cmdVector);
+						}
+					}
+					cout << "CMD " << name << "\t" << v1->valueAsString() << endl;
+					cace->caceSpace->distributeVariable(v1);
 				}
 				else
 				{
@@ -441,39 +449,6 @@ public:
 
 		}
 	}
-
-/*	static void Close(object signal, ConsoleCancelEventArgs param)
-	{
-		Console.WriteLine("Shutting down ...");
-		if (RosCS.RosSharp.Ok())
-			RosCS.RosSharp.Shutdown();
-	}
-
-	static void Main (string[] args)
-	{
-		bool quiet = false;
-		for(int i=0; i<args.Length; i++)
-		{
-			if(args[i].ToLower().Equals("quiet"))
-			{
-				quiet = true;
-				continue;
-			}
-		}
-		CaceConsole cc = new CaceConsole(quiet);
-		Console.CancelKeyPress += new ConsoleCancelEventHandler(Close);
-		for(int i=0; i<args.Length; i++)
-		{
-			if(args[i].ToLower().Equals("quiet"))
-			{
-				continue;
-			}
-			cc.cace.AgentEngangement(Int32.Parse(args[i]), false);
-		}
-
-		cc.Run();
-		Close(null,null);
-	}*/
 };
 
 int main(int argc, char **argv)

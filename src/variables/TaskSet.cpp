@@ -12,13 +12,10 @@ namespace cace
 
 	TaskSet::TaskSet()
 	{
-		// TODO Auto-generated constructor stub
-
 	}
 
 	TaskSet::~TaskSet()
 	{
-		// TODO Auto-generated destructor stub
 	}
 
 } /* namespace cace */

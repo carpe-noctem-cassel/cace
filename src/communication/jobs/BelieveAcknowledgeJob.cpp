@@ -27,7 +27,6 @@ namespace cace
 													CaceBelieveNotificationPtr notification) :
 			AbstractCommunicationJob(name, variable, robotids, lamportTime, cace)
 	{
-		// /todo
 		//int maxRetrys = SystemConfig.LocalInstance["Cace"].GetInt("Cace.MaxCommandRetrys");
 		msgID = notification->msgID;
 		updatedOwnBelieve = true;
