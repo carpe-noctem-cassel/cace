@@ -41,6 +41,8 @@ namespace cace
 										cace->timeManager->getLocalTime() / TimeManager::timeResolutionDevisor));
 			}
 		}
+		this->value = value;
+		remainingRetrys=1;
 	}
 
 	CommandJob::~CommandJob()

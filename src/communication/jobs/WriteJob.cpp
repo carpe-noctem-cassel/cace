@@ -21,6 +21,7 @@ namespace cace
 						vector<int>& robotids, unsigned long lamportTime, Cace* cace) :
 			AbstractCommunicationJob(name, variable, robotids, lamportTime, cace)
 	{
+		remainingRetrys=1;
 		this->name = name;
 		this->target = robotids.at(0);
 		msgID = (short)((int)(cace->timeManager->lamportTime + 100) * caceCommunication->getOwnID());

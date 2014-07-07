@@ -24,6 +24,7 @@ namespace cace
 													unsigned long lamportTime, Cace* cace) :
 			AbstractCommunicationJob(name, variable, robotids, lamportTime, cace)
 	{
+		remainingRetrys=1;
 		//trying to produce a uniq msg id
 		msgID = (short)((int)(cace->timeManager->lamportTime + 100) * caceCommunication->getOwnID());
 
