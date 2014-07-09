@@ -37,7 +37,7 @@ namespace cace
 	Cace::~Cace()
 	{
 #ifndef USE_ROS
-		if (isActive && timer!=nullptr)
+		if (isActive && timer != nullptr)
 		{
 			isActive = false;
 			timer->join();
@@ -314,6 +314,14 @@ namespace cace
 		if (sendBeliveUpdates)
 		{
 			string scope = getLocalScopeString();
+			if (scope.length() > 0 && scope[0] == '/')
+			{
+				scope = scope.substr(1, scope.length() - 1);
+			}
+			if (scope.length() == 0 || (scope.length() > 0 && scope[scope.length() - 1] != '/'))
+			{
+				scope = scope.append("/");
+			}
 			variableStore->sendBelieveUpdates(id, scope, *worker, timeManager->lamportTime);
 		}
 
@@ -343,6 +351,24 @@ namespace cace
 		{
 			communication->anounceDisengange();
 			communication->cleanUp();
+		}
+	}
+
+	void Cace::changeScopeAndRestoreConsistency(vector<string>& localScope)
+	{
+		this->localScope = localScope;
+		string scope = getLocalScopeString();
+		if (scope.length() > 0 && scope[0] == '/')
+		{
+			scope = scope.substr(1, scope.length() - 1);
+		}
+		if (scope.length() == 0 || (scope.length() > 0 && scope[scope.length() - 1] != '/'))
+		{
+			scope = scope.append("/");
+		}
+		for (int id : activeRobots)
+		{
+			variableStore->sendBelieveUpdates(id, scope, *worker, timeManager->lamportTime);
 		}
 	}
 }

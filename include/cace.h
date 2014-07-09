@@ -87,6 +87,7 @@ namespace cace
 		string printMessageQueueStates();
 		string printActiveRobots();
 		string getGlobalScope();
+		void changeScopeAndRestoreConsistency(vector<string>& localScope);
 		vector<string>& getLocalScope();
 		string getLocalScopeString();
 		void agentEngangement(int id, bool sendBeliveUpdates);

@@ -79,6 +79,53 @@ public:
 		return result;
 	}
 
+	void setVariableValueFromString(vector<string>& cmdVector, shared_ptr<ConsensusVariable>& v1)
+	{
+		if (cmdVector.size() == 1)
+		{
+			//distinguish all non list types:
+			if (checkType(cmdVector.at(0)) == CaceType::CDouble)
+			{
+				v1->setValue(stod(cmdVector.at(0)));
+			}
+			else if (checkType(cmdVector.at(0)) == CaceType::CInt)
+			{
+				v1->setValue(stoi(cmdVector.at(0)));
+			}
+			else
+			{
+				v1->setValue(&cmdVector.at(0));
+			}
+		}
+
+		if (cmdVector.size() > 1)
+		{
+			//distinguish all list types by the first value:
+			if (checkType(cmdVector[0]) == CaceType::CDouble)
+			{
+				vector<double> list;
+				for (string s : cmdVector)
+				{
+					list.push_back(stod(s));
+				}
+				v1->setValue(&list);
+			}
+			else if (checkType(cmdVector[0]) == CaceType::CInt)
+			{
+				vector<int> list;
+				for (string s : cmdVector)
+				{
+					list.push_back(stoi(s));
+				}
+				v1->setValue(&list);
+			}
+			else
+			{
+				v1->setValue(&cmdVector);
+			}
+		}
+	}
+
 	void run()
 	{
 		while (ros::ok())
@@ -128,50 +175,12 @@ public:
 																cace->timeManager->getDistributedTime(),
 																cace->timeManager->lamportTime, CaceType::Custom);
 
-					if (numberOfWords == 3)
+					if (cmdVector.size() > 1)
 					{
-						//distinguish all non list types:
-						if (checkType(cmdVector.at(0)) == CaceType::CDouble)
-						{
-							v1->setValue(stod(cmdVector.at(0)));
-						}
-						else if (checkType(cmdVector.at(0)) == CaceType::CInt)
-						{
-							v1->setValue(stoi(cmdVector.at(0)));
-						}
-						else
-						{
-							v1->setValue(&cmdVector.at(0));
-						}
+						cmdVector.pop_back();
 					}
+					setVariableValueFromString(cmdVector, v1);
 
-					cmdVector.pop_back();
-					if (numberOfWords > 3)
-					{
-						//distinguish all list types by the first value:
-						if (checkType(cmdVector[0]) == CaceType::CDouble)
-						{
-							vector<double> list;
-							for (string s : cmdVector)
-							{
-								list.push_back(stod(s));
-							}
-							v1->setValue(&list);
-						}
-						else if (checkType(cmdVector[0]) == CaceType::CInt)
-						{
-							vector<int> list;
-							for (string s : cmdVector)
-							{
-								list.push_back(stoi(s));
-							}
-							v1->setValue(&list);
-						}
-						else
-						{
-							v1->setValue(&cmdVector);
-						}
-					}
 					cout << "CMD " << name << "\t" << v1->valueAsString() << endl;
 					cace->caceSpace->distributeVariable(v1);
 				}
@@ -272,7 +281,7 @@ public:
 					shared_ptr<ConsensusVariable> cv = cace->caceSpace->getRequestedVariable(name);
 					if (cv.operator bool())
 					{
-						cout << cv->toString();
+						cout << cv->toString() << endl;
 					}
 				}
 				else
@@ -293,85 +302,24 @@ public:
 					cmds >> s;
 					string name = ctxt.substr(1, ctxt.length() - 1) + s;
 
+					vector<string> cmdVector;
+					while (!cmds.fail())
+					{
+						string next;
+						cmds >> next;
+						cmdVector.push_back(next);
+					}
+
 					shared_ptr<ConsensusVariable> writeVar = make_shared<ConsensusVariable>(
 							name, level, std::numeric_limits<long>::max(), targetAgent,
 							cace->timeManager->getDistributedTime(), cace->timeManager->lamportTime, 0);
 
-					if (numberOfWords == 4)
+					if (cmdVector.size() > 1)
 					{
-						string firstVal;
-						cmds >> firstVal;
-						//distinguish all non list types:
-						if (firstVal.find(".") != string::npos)
-						{
-							string val;
-							cmds >> val;
-							cout << "WRITE to " << targetAgent << ": " << name << "\t" << stod(val) << "d" << endl;
-							writeVar->setValue(stod(val));
-						}
-						/*else if (Int32.TryParse(cmds[3], out temp))
-						 {
-						 Console.WriteLine("WRITE to " + cmds[1] + ": " + cmds[2] + "\t" + temp + "i");
-						 writeVar.SetValue(temp);
-						 }
-						 else if (cmds[3].Split(new char[] {','}, StringSplitOptions.None).Length == 2)
-						 {
-						 string[] p = cmds[3].Split(new char[]
-						 {	','}, StringSplitOptions.None);
-						 Console.WriteLine("WRITE to " + cmds[1] + ": " + "\t(" + p[0] + "," + p[1] + ")");
-						 writeVar.SetValue(double.Parse(p[0]), double.Parse(p[1]));
-						 */
+						cmdVector.pop_back();
 					}
-					else
-					{
-						string val;
-						cmds >> val;
-						cout << "WRITE to " << targetAgent << ": \t" << val << endl;
-						//cace->caceSpace->distributeValue(name, val, level);
-						//writeVar->setValue(cmds[3]);
-					}
+					setVariableValueFromString(cmdVector, writeVar);
 
-					if (numberOfWords > 4)
-					{
-						/*//distinguish all list types by the first value:
-						 if (cmds[3].Contains("."))
-						 {
-						 List<double> dlist = new List<double>();
-						 Console.Write("WRITE to " + cmds[1] + ": " + cmds[2]);
-						 for (int i = 3; i < cmds.Length; i++)
-						 {
-						 dlist.Add(double.Parse(cmds[i]));
-						 Console.Write("\t" + Double.Parse(cmds[i]) + "d");
-						 }
-						 Console.WriteLine();
-						 writeVar.SetValue(dlist);
-						 }
-						 else if (Int32.TryParse(cmds[3], out temp))
-						 {
-						 List<int> dlist = new List<int>();
-						 Console.Write("WRITE to " + cmds[1] + ": " + cmds[2]);
-						 for (int i = 3; i < cmds.Length; i++)
-						 {
-						 dlist.Add(Int32.Parse(cmds[i]));
-						 Console.Write("\t" + Int32.Parse(cmds[i]) + "i");
-						 }
-						 Console.WriteLine();
-						 writeVar.SetValue(dlist);
-						 }
-						 else
-						 {
-						 List<string> dlist = new List<string>();
-						 Console.Write("WRITE to " + cmds[1] + ": " + cmds[2]);
-						 for (int i = 3; i < cmds.Length; i++)
-						 {
-						 dlist.Add(cmds[i]);
-						 Console.Write("\t" + cmds[i]);
-						 }
-						 Console.WriteLine();
-						 writeVar.SetValue(dlist);
-						 }
-						 */
-					}
 					cace->caceSpace->writeVariable(writeVar, targetAgent);
 				}
 				else
@@ -395,7 +343,6 @@ public:
 					}
 					vector<string> sc = split(newScope);
 					for (int i = 0; i < sc.size(); i++)
-					//while(newScope.find("/")!=string::npos)
 					{
 						if (sc.size() == 0)
 						{
@@ -413,6 +360,7 @@ public:
 							cace->localScope.push_back(sc[i]);
 						}
 					}
+					cace->changeScopeAndRestoreConsistency(cace->localScope);
 				}
 			}
 			else if (tmp == string("quiet"))

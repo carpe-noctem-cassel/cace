@@ -202,6 +202,10 @@ namespace cace
 			{
 				inStoreVar->update(*var);
 				var = inStoreVar;
+				vector<int> all = *cace->getActiveRobots();
+				worker->appendJob(
+						new CommandJob(var->getName(), var, var->getValue(), all, cace->timeManager->lamportTime,
+										cace));
 				//cout << "Cannot distribute Variables, when a variable with the same key already exists." << endl;
 			}
 		}
