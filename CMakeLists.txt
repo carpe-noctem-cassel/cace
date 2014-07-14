@@ -134,26 +134,27 @@ target_link_libraries(caceMonitor ${catkin_LIBRARIES} ${PROJECT_NAME})
 catkin_add_gtest(${PROJECT_NAME}-test ${_my_sources} test/caceTests.cpp test/jobTests.cpp test/systemTests.cpp test/applicationTests.cpp test/serialization.cpp test/multicasttests.cpp)
 
 if(TARGET ${PROJECT_NAME}-test)
-target_link_libraries(${PROJECT_NAME}-test
-#${PROJECT_NAME}
-${catkin_LIBRARIES}
-)
+target_link_libraries(${PROJECT_NAME}-test ${catkin_LIBRARIES})
 set_target_properties(${PROJECT_NAME}-test PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
 set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
 #set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g -DUSE_ROS")
-endif()
 
 
 catkin_add_gtest(${PROJECT_NAME}-eval ${_my_sources} test/eval/speed.cpp)
-
-if(TARGET ${PROJECT_NAME}-test)
 include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}-eval
-#${PROJECT_NAME}
-${catkin_LIBRARIES} ${Boost_LIBRARIES}
-)
+target_link_libraries(${PROJECT_NAME}-eval ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 set_target_properties(${PROJECT_NAME}-eval PROPERTIES LINK_FLAGS "-O5")
 set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-O5  -mtune=native -lrt -ftree-vectorize -msse3 -ffast-math -O3 -funroll-loops -fomit-frame-pointer")
 #set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-O5 -DUSE_ROS")
+
+
+catkin_add_gtest(${PROJECT_NAME}-timeeval ${_my_sources} test/eval/timeEval.cpp)
+include_directories(${Boost_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}-timeeval ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES LINK_FLAGS "-O5")
+set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES COMPILE_FLAGS "-O5  -mtune=native -lrt -ftree-vectorize -msse3 -ffast-math -O3 -funroll-loops -fomit-frame-pointer")
+#set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES COMPILE_FLAGS "-O5 -DUSE_ROS")
+
+
 endif()
 # catkin_add_nosetests(test)

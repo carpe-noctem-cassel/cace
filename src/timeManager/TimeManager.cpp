@@ -6,7 +6,6 @@
  */
 
 //#define USE_ROS
-
 #include "timeManager/TimeManager.h"
 #include "communication/CaceCommunication.h"
 #include "SystemConfig.h"
@@ -18,9 +17,11 @@ namespace cace
 
 	TimeManager::TimeManager(CaceCommunication* com)
 	{
+		timeEvalOffeset = 0;
 		lastSent = 0;
 		lamportTime = 1;
 		timeDiff = 0;
+		timeReceiveEvalOffeset = 0;
 		this->com = com;
 
 		supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
@@ -32,7 +33,7 @@ namespace cace
 
 		AgentCommunicationModel::defaultDelay = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelay", NULL);
 		AgentCommunicationModel::defaultDelayVariance = (*sc)["Cace"]->get<unsigned long>("Cace.DefaultDelayVariance",
-																							NULL);
+		NULL);
 	}
 
 	TimeManager::~TimeManager()
@@ -43,11 +44,11 @@ namespace cace
 	{
 #ifdef USE_ROS
 		ros::Time now = ros::Time::now();
-		return timeDiff + ((unsigned long)now.sec) * 1000000000ul + (unsigned long)now.nsec;
+		return timeDiff + ((unsigned long)now.sec) * 1000000000ul + (unsigned long)now.nsec + timeEvalOffeset;
 #else
 		auto now = std::chrono::high_resolution_clock::now();
 		auto duration = now.time_since_epoch();
-		return timeDiff + std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();// + 1000000*com->getOwnID();
+		return timeDiff + std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count() + timeEvalOffeset;
 #endif
 	}
 
@@ -55,11 +56,11 @@ namespace cace
 	{
 #ifdef USE_ROS
 		ros::Time now = ros::Time::now();
-		return ((unsigned long)now.sec) * 1000000000ul + (unsigned long)now.nsec;
+		return ((unsigned long)now.sec) * 1000000000ul + (unsigned long)now.nsec + timeEvalOffeset;
 #else
 		auto now = std::chrono::high_resolution_clock::now();
 		auto duration = now.time_since_epoch();
-		return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();// + 1000000*com->getOwnID();
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count() + timeEvalOffeset;
 #endif
 	}
 
@@ -130,14 +131,13 @@ namespace cace
 
 	void TimeManager::addTimeMessage(CaceTimePtr ct, unsigned long receivedTime)
 	{
+		receivedTime += timeReceiveEvalOffeset;
 		map<int, AgentCommunicationModel>::iterator it;
 
 		lock_guard<std::mutex> lock(this->modelMutex);
 		//cout << "please implement this! (TimeManager.cpp:AddTimeMessage)" << endl;
 		AgentTimeData* agt = new AgentTimeData(ct->localtime, ct->distributedTime,
 												(ctime)((long)receivedTime + timeDiff), receivedTime, ct->senderID);
-
-
 
 		if (agentModels.find(ct->senderID) == agentModels.end())
 		{
@@ -147,7 +147,7 @@ namespace cace
 
 		//Comment out for fixed values:
 		model->addData(agt);
-		ctime mu = model->getMaxLikelihoodDelay();
+		//ctime mu = model->getMaxLikelihoodDelay();
 		//Console.WriteLine("Sender: "+ct.SenderID+" mu:" + mu +" b: "+model.GetMaxLikelihoodDelayVariance(mu) + " P(L): "+model.GetProbabilityForPacketLoss() + " DataCount: "+model.Data.Count);
 
 		//cout << ct->localtime << "\t" << ct->distributedTime << "\t" << receivedTime << "\t" << timeDiff << "\t"<< mu << endl;
@@ -156,12 +156,13 @@ namespace cace
 		long count = 0;
 		for (it = agentModels.begin(); it != agentModels.end(); it++)
 		{
-			if(it->second.data.size() > 1) {
+			if (it->second.data.size() > 1)
+			{
 				diffSum += (long)it->second.getEstimatedTimeDifference();
 				count++;
 			}
 		}
-		timeDiff += ((diffSum / (count + 1)) - timeDiff) / 3;
+		timeDiff += ((diffSum / (count + 1)) - timeDiff) * 0.3; // / 3;
 
 	}
 
@@ -180,4 +181,10 @@ namespace cace
 				+ acmstring;
 	}
 
+	void TimeManager::clearQueues()
+	{
+		agentModels.clear();
+	}
+
 } /* namespace cace */
+

@@ -48,6 +48,8 @@ namespace cace
 		 * should not be changed manually!
 		 */
 		long timeDiff;
+		long timeEvalOffeset;
+		long timeReceiveEvalOffeset;
 
 		/*!
 		 * Indicates the max time before resending a command
@@ -107,6 +109,10 @@ namespace cace
 
 		string toString();
 
+		/*!
+		 * resets all agent models
+		 */
+		void clearQueues();
 
 		map<int, AgentCommunicationModel> agentModels;
 		static unsigned long timeMessageInterval;

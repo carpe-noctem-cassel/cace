@@ -48,7 +48,12 @@ namespace cace
 		 * Computes the estimated networkdelay based on a laplacian propability distribution using
 		 * a maximum likelihood estimator
 		 */
-		ctime getMaxLikelihoodDelay();
+		long getMaxLikelihoodDelay();
+
+		/*!
+		 * Computes the estimated networkdelay younger delay estimates assume high weight older lower weights
+		 */
+		long getWeightedDelay();
 
 		/*!
 		 * Computes the estimated networkdelay variance based on a laplacian propability distribution using

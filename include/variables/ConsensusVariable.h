@@ -114,6 +114,7 @@ namespace cace
 		 */
 		int getRobotID();
 		void setRobotID(int id);
+
 		/*!
 		 * The time the value has been set as local timestamp
 		 */
