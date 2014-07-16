@@ -106,7 +106,16 @@ public:
 	void notifyChange(ConsensusVariable* v)
 	{
 		time = cace->timeManager->getLocalTime();
-		cout << time << "\t" << v->toString() << endl;
+		long sendingtime;
+		v->getValue(&sendingtime);
+		long timeDiff = std::numeric_limits<long>::max();
+		cout << v->getArrivalTime() << "\t";
+		for (auto prop : v->proposals)
+		{
+			prop->getValue(sendingtime);
+			cout << prop->getRobotID() << ": " << prop->getArrivalTime() << "\t";
+		}
+		cout << endl;
 	}
 };
 
@@ -129,7 +138,8 @@ int main(int argc, char **argv)
 	if (argc > 1)
 	{
 		// "sender"
-		for(int i=0; i<100; i++) {
+		for (int i = 0; i < 100; i++)
+		{
 			V1Time.v1->setValue((long)V1Time.cace->timeManager->getLocalTime());
 			V1Time.cace->caceSpace->distributeVariable(V1Time.v1);
 			this_thread::sleep_for(chrono::milliseconds(1000));

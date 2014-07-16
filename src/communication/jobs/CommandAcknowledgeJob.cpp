@@ -167,6 +167,7 @@ namespace cace
 					if (var->getLamportAge() < command->lamportTime)
 					{
 						var->setValue(command->value);
+						var->setArrivalTime(cace->timeManager->getLocalTime());
 						var->setDecissionTime(command->decissionTime);
 						var->setValidityTime(command->validityTime);
 						var->setLamportAge(command->lamportTime);
@@ -184,6 +185,7 @@ namespace cace
 															command->decissionTime, command->lamportTime,
 															command->type);
 				var->setValue(command->value);
+				var->setArrivalTime(cace->timeManager->getLocalTime());
 				var->setRobotID(command->senderID);
 				cv->proposals.push_back(var);
 				proposalsUpdated = true;
@@ -204,6 +206,7 @@ namespace cace
 														command->validityTime, command->senderID,
 														command->decissionTime, command->lamportTime, command->type);
 			co->setValue(command->value);
+			co->setArrivalTime(cace->timeManager->getLocalTime());
 			cv->proposals.push_back(co);
 			cv->acceptProposals(*cace, &command->value);
 			store->addVariable(cv);

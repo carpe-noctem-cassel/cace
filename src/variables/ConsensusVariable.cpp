@@ -34,6 +34,7 @@ namespace cace
 	ConsensusVariable::ConsensusVariable(string name, acceptStrategy strategy, unsigned long validityTime, int robotID,
 											unsigned long decissionTime, unsigned long lamportAge, short type)
 	{
+		setArrivalTime(decissionTime);
 		this->hasValue = false;
 		this->name = name;
 		this->setAcceptStrategy(strategy);

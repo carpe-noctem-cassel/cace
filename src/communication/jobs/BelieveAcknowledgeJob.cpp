@@ -167,6 +167,7 @@ namespace cace
 					found = true;
 					if (var->getLamportAge() < notification->lamportTime)
 					{
+						var->setArrivalTime(cace->timeManager->getLocalTime());
 						var->setValue(notification->value);
 						var->setDecissionTime(notification->decissionTime);
 						var->setValidityTime(notification->validityTime);
@@ -185,6 +186,7 @@ namespace cace
 															notification->validityTime, notification->senderID,
 															notification->decissionTime, notification->lamportTime,
 															notification->type);
+				var->setArrivalTime(cace->timeManager->getLocalTime());
 				var->setValue(notification->value);
 				var->setRobotID(notification->senderID);
 				cv->proposals.push_back(var);
@@ -207,6 +209,7 @@ namespace cace
 														notification->decissionTime, notification->lamportTime,
 														notification->type);
 			co->setValue(notification->value);
+			co->setArrivalTime(cace->timeManager->getLocalTime());
 			cv->proposals.push_back(co);
 
 			cv->acceptProposals(*cace, &notification->value);

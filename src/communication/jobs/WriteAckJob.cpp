@@ -59,6 +59,7 @@ namespace cace
 		{
 			cv = store->getVariable(cmd->variableName);
 			cv->setValue(cmd->value);
+			cv->setArrivalTime(cace->timeManager->getLocalTime());
 			cv->setDecissionTime(cmd->decissionTime);
 			cv->setValidityTime(cmd->validityTime);
 			cv->setLamportAge(cmd->lamportTime);
@@ -74,6 +75,7 @@ namespace cace
 												caceCommunication->getOwnID(), cmd->decissionTime, cmd->lamportTime,
 												cmd->type);
 			cv->setValue(cmd->value);
+			cv->setArrivalTime(cace->timeManager->getLocalTime());
 
 			store->addVariable(cv);
 		}

@@ -80,8 +80,9 @@ namespace cace
 					if (var->getLamportAge() < ack->lamportTime)
 					{
 						var->setValue(ack->value);
-						var->setDecissionTime(std::numeric_limits<long>::max()-1);
-						var->setValidityTime(std::numeric_limits<long>::max()-1);
+						var->setArrivalTime(cace->timeManager->getLocalTime());
+						var->setDecissionTime(std::numeric_limits<long>::max());
+						var->setValidityTime(std::numeric_limits<long>::max());
 						var->setLamportAge(ack->lamportTime);
 						//var->setAcceptStrategy((acceptStrategy)3);
 						var->setType(ack->type);
@@ -96,6 +97,7 @@ namespace cace
 															cv->getValidityTime(), ack->senderID,
 															cv->getDecissionTime(), ack->lamportTime, ack->type);
 				var->setValue(ack->value);
+				var->setArrivalTime(cace->timeManager->getLocalTime());
 				var->setRobotID(ack->senderID);
 				cv->proposals.push_back(var);
 				proposalsUpdated = true;
@@ -114,9 +116,10 @@ namespace cace
 												std::numeric_limits<long>::max()-1, caceCommunication->getOwnID(),
 												std::numeric_limits<long>::max()-1, 0, ack->type);
 			auto co = make_shared<ConsensusVariable>(ack->variableName, acceptStrategy::ThreeWayHandShake,
-														std::numeric_limits<long>::max()-1, ack->senderID,
-														std::numeric_limits<long>::max()-1, ack->lamportTime, ack->type);
+														std::numeric_limits<long>::max(), ack->senderID,
+														std::numeric_limits<long>::max(), ack->lamportTime, ack->type);
 			co->setValue(ack->value);
+			co->setArrivalTime(cace->timeManager->getLocalTime());
 			cv->proposals.push_back(co);
 
 			cv->acceptProposals(*cace, &ack->value);

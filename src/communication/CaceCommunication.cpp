@@ -190,6 +190,7 @@ namespace cace
 			if (cc->value.size() > 0)
 			{
 				cv->setValue(cc->value);
+				cv->setArrivalTime(cace->timeManager->getLocalTime());
 			}
 			cace->variableStore->addResponse(cv);
 		}
