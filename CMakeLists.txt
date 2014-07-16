@@ -155,6 +155,12 @@ set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES LINK_FLAGS "-O5")
 set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES COMPILE_FLAGS "-O5  -mtune=native -lrt -ftree-vectorize -msse3 -ffast-math -O3 -funroll-loops -fomit-frame-pointer")
 #set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES COMPILE_FLAGS "-O5 -DUSE_ROS")
 
+catkin_add_gtest(${PROJECT_NAME}-consistencytest  test/eval/consistencyEval.cpp)
+target_link_libraries(${PROJECT_NAME}-consistencytest ${PROJECT_NAME} ${catkin_LIBRARIES})
+set_target_properties(${PROJECT_NAME}-consistencytest PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
+set_target_properties(${PROJECT_NAME}-consistencytest PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
+
+
 
 endif()
 # catkin_add_nosetests(test)

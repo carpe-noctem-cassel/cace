@@ -71,19 +71,21 @@ namespace cace
 			cv = store->getVariable(ack->variableName);
 
 			bool found = false;
+			bool proposalsUpdated = false;
 			for (auto var : cv->proposals)
 			{
 				if (var->getRobotID() == ack->senderID)
 				{
 					found = true;
-					if (var->getLamportAge() <= ack->lamportTime)
+					if (var->getLamportAge() < ack->lamportTime)
 					{
 						var->setValue(ack->value);
-						var->setDecissionTime(std::numeric_limits<long>::max());
-						var->setValidityTime(std::numeric_limits<long>::max());
+						var->setDecissionTime(std::numeric_limits<long>::max()-1);
+						var->setValidityTime(std::numeric_limits<long>::max()-1);
 						var->setLamportAge(ack->lamportTime);
 						//var->setAcceptStrategy((acceptStrategy)3);
 						var->setType(ack->type);
+						proposalsUpdated = true;
 					}
 				}
 			}
@@ -91,25 +93,29 @@ namespace cace
 			{
 				//add believe
 				auto var = make_shared<ConsensusVariable>(ack->variableName, cv->getAcceptStrategy(),
-																cv->getValidityTime(), ack->senderID,
-																cv->getDecissionTime(), ack->lamportTime, ack->type);
+															cv->getValidityTime(), ack->senderID,
+															cv->getDecissionTime(), ack->lamportTime, ack->type);
 				var->setValue(ack->value);
 				var->setRobotID(ack->senderID);
 				cv->proposals.push_back(var);
+				proposalsUpdated = true;
 			}
-			cv->notify();
+			if (proposalsUpdated)
+			{
+				//cv->notify();
+				cv->acceptProposals(*cace, nullptr);
+			}
 			//cv->acceptProposals(*cace, nullptr);
 		}
 		else
 		{
 			//If we don't know anything: Accept Command
 			cv = make_shared<ConsensusVariable>(ack->variableName, acceptStrategy::ThreeWayHandShake,
-												std::numeric_limits<long>::max(), caceCommunication->getOwnID(),
-												std::numeric_limits<long>::max(), 0, ack->type);
+												std::numeric_limits<long>::max()-1, caceCommunication->getOwnID(),
+												std::numeric_limits<long>::max()-1, 0, ack->type);
 			auto co = make_shared<ConsensusVariable>(ack->variableName, acceptStrategy::ThreeWayHandShake,
-															std::numeric_limits<long>::max(), ack->senderID,
-															std::numeric_limits<long>::max(), ack->lamportTime,
-															ack->type);
+														std::numeric_limits<long>::max()-1, ack->senderID,
+														std::numeric_limits<long>::max()-1, ack->lamportTime, ack->type);
 			co->setValue(ack->value);
 			cv->proposals.push_back(co);
 

@@ -39,7 +39,7 @@
 #include <tuple>
 #include <thread>
 
-const int tries = 1;
+const int tries = 10000;
 
 using namespace cace;
 using namespace std;
@@ -234,7 +234,7 @@ TEST_F(SpeedEval, ConsistencyDelay)
 	IncrementalEstimator feedback;
 	IncrementalEstimator consensus;
 
-	for (int curSize = 0; curSize < 65536; curSize += 200)
+	for (int curSize = 25000; curSize < 65536; curSize += 200)
 	{
 		vector<uint8_t> val(curSize);
 		v2->setValue(val);
@@ -257,7 +257,7 @@ TEST_F(SpeedEval, ConsistencyDelay)
 				cace1->step();
 				cace2->step();
 			}
-			this_thread::sleep_for(chrono::milliseconds(250));
+			this_thread::sleep_for(chrono::milliseconds(10));
 			//timeRemoteArrival += duration_cast<std::chrono::nanoseconds>(V1Time.time - before);
 			/*if ((duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() > 0
 					&& duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count() > 0

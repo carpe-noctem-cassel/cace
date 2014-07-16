@@ -27,7 +27,7 @@ namespace cace
 													CaceBelieveNotificationPtr notification) :
 			AbstractCommunicationJob(name, variable, robotids, lamportTime, cace)
 	{
-		remainingRetrys=1;
+		remainingRetrys = 1;
 		//int maxRetrys = SystemConfig.LocalInstance["Cace"].GetInt("Cace.MaxCommandRetrys");
 		msgID = notification->msgID;
 		updatedOwnBelieve = true;
@@ -157,15 +157,15 @@ namespace cace
 		if (store->existsVariable(notification->variableName))
 		{
 			cv = store->getVariable(notification->variableName);
-			cv = store->getVariable(notification->variableName);
 
 			bool found = false;
+			bool proposalsUpdated = false;
 			for (auto var : cv->proposals)
 			{
 				if (var->getRobotID() == notification->senderID)
 				{
 					found = true;
-					if (var->getLamportAge() <= notification->lamportTime)
+					if (var->getLamportAge() < notification->lamportTime)
 					{
 						var->setValue(notification->value);
 						var->setDecissionTime(notification->decissionTime);
@@ -173,6 +173,7 @@ namespace cace
 						var->setLamportAge(notification->lamportTime);
 						var->setAcceptStrategy((acceptStrategy)notification->level);
 						var->setType(notification->type);
+						proposalsUpdated = true;
 					}
 				}
 			}
@@ -187,8 +188,12 @@ namespace cace
 				var->setValue(notification->value);
 				var->setRobotID(notification->senderID);
 				cv->proposals.push_back(var);
+				proposalsUpdated = true;
 			}
-			cv->acceptProposals(*cace, nullptr);
+			if (proposalsUpdated)
+			{
+				cv->acceptProposals(*cace, nullptr);
+			}
 		}
 		else
 		{

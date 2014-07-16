@@ -41,8 +41,8 @@ namespace cace
 	long AgentCommunicationModel::getEstimatedTimeDifference()
 	{
 		long ret = 0;
-		long delay = getMaxLikelihoodDelay();
-		//long delay = getWeightedDelay();
+		//long delay = getMaxLikelihoodDelay();
+		long delay = getWeightedDelay();
 		list<AgentTimeData*>::iterator it;
 		for (it = data.begin(); it != data.end(); it++)
 		{
@@ -67,17 +67,34 @@ namespace cace
 		list<AgentTimeData*>::iterator it;
 		for (it = data.begin(); it != data.end(); it++)
 		{
-			long delay = abs(((long)(*it)->distributedMessageArrivalTime)/1000000 - ((long)(*it)->distributedTime)/1000000);
+			ctime delay = (ctime)abs(((long)(*it)->distributedMessageArrivalTime) - ((long)(*it)->distributedTime));
 			//cout << delay << "\t";
-			m += ((long)delay*delay);
+			m += ((long)delay) / num;
 		}
-		return (long)(sqrt(m)*1000000/num);
+		return (ctime)m;
 	}
 
 	long AgentCommunicationModel::getWeightedDelay()
 	{
 		//maximum likelhood estimation of laplacian distribution
 		long m = 0;
+		long num = (long)data.size();
+
+		if (data.size() <= 1)
+		{
+			return defaultDelay;
+		}
+
+		list<AgentTimeData*>::iterator it;
+		for (it = data.begin(); it != data.end(); it++)
+		{
+			long delay = abs(((long)(*it)->distributedMessageArrivalTime)/1000000 - ((long)(*it)->distributedTime)/1000000);
+			//cout << delay << "\t";
+			m += ((long)delay*delay);
+		}
+		return (long)(sqrt(m)*1000000/num);
+		//maximum likelhood estimation of laplacian distribution
+		/*long m = 0;
 		long num = (long)data.size();
 
 		if (data.size() <= 1)
@@ -99,7 +116,7 @@ namespace cace
 			sum +=cur;
 			m += ((double)delay) * cur;
 		}
-		return (double)m / sum;
+		return (double)m / sum;*/
 	}
 
 	ctime AgentCommunicationModel::getMaxLikelihoodDelayVariance(ctime averageDelay)

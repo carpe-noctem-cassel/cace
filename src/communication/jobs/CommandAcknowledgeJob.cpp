@@ -33,7 +33,7 @@ namespace cace
 		command = cmd;
 		/*supplementary::SystemConfig* sc = supplementary::SystemConfig::getInstance();
 
-		maxRetrys = (*sc)["Cace"]->get<int>("Cace.MaxCommandRetrys", NULL);*/
+		 maxRetrys = (*sc)["Cace"]->get<int>("Cace.MaxCommandRetrys", NULL);*/
 
 		if (!cace->safeStepMode)
 		{
@@ -158,12 +158,13 @@ namespace cace
 			cv = store->getVariable(command->variableName);
 
 			bool found = false;
+			bool proposalsUpdated = false;
 			for (auto var : cv->proposals)
 			{
 				if (var->getRobotID() == command->senderID)
 				{
 					found = true;
-					if (var->getLamportAge() <= command->lamportTime)
+					if (var->getLamportAge() < command->lamportTime)
 					{
 						var->setValue(command->value);
 						var->setDecissionTime(command->decissionTime);
@@ -171,6 +172,7 @@ namespace cace
 						var->setLamportAge(command->lamportTime);
 						var->setAcceptStrategy((acceptStrategy)command->level);
 						var->setType(command->type);
+						proposalsUpdated = true;
 					}
 				}
 			}
@@ -178,14 +180,19 @@ namespace cace
 			{
 				//add believe
 				auto var = make_shared<ConsensusVariable>(command->variableName, (acceptStrategy)command->level,
-																command->validityTime, command->senderID,
-																command->decissionTime, command->lamportTime,
-																command->type);
+															command->validityTime, command->senderID,
+															command->decissionTime, command->lamportTime,
+															command->type);
 				var->setValue(command->value);
 				var->setRobotID(command->senderID);
 				cv->proposals.push_back(var);
+				proposalsUpdated = true;
 			}
-			cv->acceptProposals(*cace, nullptr);
+			if (proposalsUpdated)
+			{
+				//if(caceCommunication->getOwnID()==3)
+				cv->acceptProposals(*cace, nullptr);
+			}
 		}
 		else
 		{
@@ -194,14 +201,13 @@ namespace cace
 												command->validityTime, caceCommunication->getOwnID(),
 												command->decissionTime, command->lamportTime, command->type);
 			auto co = make_shared<ConsensusVariable>(command->variableName, (acceptStrategy)command->level,
-															command->validityTime, command->senderID,
-															command->decissionTime, command->lamportTime,
-															command->type);
+														command->validityTime, command->senderID,
+														command->decissionTime, command->lamportTime, command->type);
 			co->setValue(command->value);
 			cv->proposals.push_back(co);
 			cv->acceptProposals(*cace, &command->value);
-			updatedOwnBelieve = true;
 			store->addVariable(cv);
+			updatedOwnBelieve = true;
 		}
 
 		return cv;

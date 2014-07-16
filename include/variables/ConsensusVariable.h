@@ -172,6 +172,8 @@ namespace cace
 		void setValue(double in);
 		bool getValue(int* out);
 		void setValue(int in);
+		bool getValue(long* out);
+		void setValue(long in);
 		bool getValue(string& out);
 		void setValue(string* in);
 

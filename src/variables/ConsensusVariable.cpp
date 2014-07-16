@@ -48,6 +48,7 @@ namespace cace
 	{
 		this->name = string(v.getName());
 		this->val = vector<uint8_t>(v.val);
+		hasValue = val.size() > 0;
 		this->arrivalTime = v.arrivalTime;
 		this->setAcceptStrategy(v.strategy);
 		if (v.validityTime != std::numeric_limits<long>::max())
@@ -60,7 +61,7 @@ namespace cace
 			this->type = v.type;
 
 		//notifies all subscribers about change
-		notify();
+		//notify();
 	}
 	bool ConsensusVariable::valueEqual(vector<uint8_t>* cmp)
 	{
@@ -373,6 +374,12 @@ namespace cace
 			getValue(&tmp);
 			return to_string(tmp) + string("i");
 		}
+		else if (type == CaceType::CLong)
+		{
+			long tmp;
+			getValue(&tmp);
+			return to_string(tmp) + string("l");
+		}
 		else if (type == CaceType::CString)
 		{
 			string s;
@@ -496,6 +503,23 @@ namespace cace
 		serialize(in, val);
 		hasValue = true;
 		type = CaceType::CInt;
+	}
+
+	bool ConsensusVariable::getValue(long* out)
+	{
+		if (type == CaceType::CLong)
+		{
+			*out = deserialize<long>(val);
+		}
+		return type == CaceType::CLong;
+	}
+
+	void ConsensusVariable::setValue(long in)
+	{
+		val.clear();
+		serialize(in, val);
+		hasValue = true;
+		type = CaceType::CLong;
 	}
 
 	bool ConsensusVariable::getValue(string& out)
