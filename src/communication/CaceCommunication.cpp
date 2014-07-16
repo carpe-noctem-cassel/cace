@@ -292,7 +292,7 @@ namespace cace
 			shared_ptr<ConsensusVariable> ptr;
 			vector<int> empty;
 			lock_guard<std::mutex> lock(ackMutex);
-			acknowledges.push_back(ca);
+			//acknowledges.push_back(ca);
 
 			worker->appendJob(
 					(AbstractCommunicationJob*)new ShortAckJob(ca->variableName, ptr, empty,

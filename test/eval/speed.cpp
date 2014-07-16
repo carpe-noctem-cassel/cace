@@ -39,7 +39,7 @@
 #include <tuple>
 #include <thread>
 
-const int tries = 10000;
+const int tries = 1000;
 
 using namespace cace;
 using namespace std;
@@ -234,8 +234,21 @@ TEST_F(SpeedEval, ConsistencyDelay)
 	IncrementalEstimator feedback;
 	IncrementalEstimator consensus;
 
+	high_resolution_clock::time_point before;
+
 	for (int curSize = 25000; curSize < 65536; curSize += 200)
 	{
+		/*delete cace1;
+		delete cace2;
+
+		cace1 = Cace::getEmulated("", 1);
+		cace2 = Cace::getEmulated("", 2);
+		cace1->activeRobots.push_back(2);
+		cace1->communication->startAsynchronous();
+		cace2->activeRobots.push_back(1);
+		cace2->communication->startAsynchronous();
+		this_thread::sleep_for(chrono::milliseconds(1));*/
+
 		vector<uint8_t> val(curSize);
 		v2->setValue(val);
 		arrival.clear();
@@ -246,13 +259,15 @@ TEST_F(SpeedEval, ConsistencyDelay)
 			V1Time.first = true;
 			V2Time.first = true;
 			cace2->worker->clearJobs();
+			cace2->communication->clearAllMessageLists();
 			cace1->worker->clearJobs();
+			cace1->communication->clearAllMessageLists();
 			//val.resize(curSize);
 			//v2->setValue(val);
-			high_resolution_clock::time_point before = high_resolution_clock::now();
+			before = high_resolution_clock::now();
 			cace2->caceSpace->distributeVariable(v2);
 			//cace2->caceSpace->distributeValue(name, val, CaceType::Custom, acceptStrategy::TwoWayHandShake);
-			for (int n = 0; n < 5; n++)
+			for (int n = 0; n < 10; n++)
 			{
 				cace1->step();
 				cace2->step();
@@ -260,25 +275,25 @@ TEST_F(SpeedEval, ConsistencyDelay)
 			this_thread::sleep_for(chrono::milliseconds(10));
 			//timeRemoteArrival += duration_cast<std::chrono::nanoseconds>(V1Time.time - before);
 			/*if ((duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() > 0
-					&& duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count() > 0
-					&& duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count() > 0)
-					&& (duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() < 400000
-							&& duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count() < 400000
-							&& duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count() < 400000))
-			{*/
+			 && duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count() > 0
+			 && duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count() > 0)
+			 && (duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() < 400000
+			 && duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count() < 400000
+			 && duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count() < 400000))
+			 {*/
 
-				arrival.addData(duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count());
-				//timeFeedback += duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time);
-				feedback.addData(duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count());
-				//total += duration_cast<std::chrono::nanoseconds>(V2Time.time - before);
-				consensus.addData(duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count());
-				//cout << duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() << endl;
+			arrival.addData(duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count());
+			//timeFeedback += duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time);
+			feedback.addData(duration_cast<std::chrono::nanoseconds>(V2Time.time - V1Time.time).count());
+			//total += duration_cast<std::chrono::nanoseconds>(V2Time.time - before);
+			consensus.addData(duration_cast<std::chrono::nanoseconds>(V2Time.time - before).count());
+			//cout << duration_cast<std::chrono::nanoseconds>(V1Time.time - before).count() << endl;
 			/*}
-			else
-			{
-				cout << "#Lost Packet" << endl;
-				i--;
-			}*/
+			 else
+			 {
+			 cout << "#Lost Packet" << endl;
+			 i--;
+			 }*/
 		}
 		std::cout << "Cace - Size: " << curSize << "\tArrival\t" << arrival.toString() << " ns\t";
 		std::cout << "Feedback: " << feedback.toString() << " ns\t";
