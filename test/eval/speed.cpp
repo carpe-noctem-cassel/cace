@@ -39,7 +39,7 @@
 #include <tuple>
 #include <thread>
 
-const int tries = 1000;
+const int tries = 10000;
 
 using namespace cace;
 using namespace std;
@@ -236,7 +236,7 @@ TEST_F(SpeedEval, ConsistencyDelay)
 
 	high_resolution_clock::time_point before;
 
-	for (int curSize = 25000; curSize < 65536; curSize += 200)
+	for (int curSize = 0; curSize < 65536; curSize += 200)
 	{
 		/*delete cace1;
 		delete cace2;

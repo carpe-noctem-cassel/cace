@@ -252,9 +252,9 @@ namespace cace
 			{
 				vector<int> nall = cace->activeRobots;
 				shared_ptr<ConsensusVariable> np;
-				//worker->appendJob(
-				//		new CommandAcknowledgeJob(cc->variableName, np, nall, cace->timeManager->lamportTime, cace, cc));
-				commands.push_back(cc);
+				worker->appendJob(
+						new CommandAcknowledgeJob(cc->variableName, np, nall, cace->timeManager->lamportTime, cace, cc));
+				//commands.push_back(cc);
 			}
 		}
 	}

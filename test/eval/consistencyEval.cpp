@@ -100,29 +100,73 @@ public:
 	~TimeMeasure()
 	{
 	}
-	Cace *cace;
+	Cace *cace;bool initiator;
 	shared_ptr<ConsensusVariable> v1;
 	unsigned long time;
+	int count = 0;
+	IncrementalEstimator ie1;
+	IncrementalEstimator ie2;
 	void notifyChange(ConsensusVariable* v)
 	{
 		time = cace->timeManager->getLocalTime();
+
 		long sendingtime;
 		v->getValue(&sendingtime);
-		long timeDiff = std::numeric_limits<long>::max();
-		cout << v->getArrivalTime() << "\t";
-		for (auto prop : v->proposals)
+
+		if (initiator && v->isAgreed(*cace))
 		{
-			prop->getValue(sendingtime);
-			cout << prop->getRobotID() << ": " << prop->getArrivalTime() << "\t";
+			ie1.addData(time - sendingtime);
+			cout << "TimeForConsensus: " << ie1.toString() << endl;
+			count++;
 		}
-		cout << endl;
+		if (!initiator)
+		{
+			long lastConsistentCommandedValue;
+			for (auto prop : v->proposals)
+			{
+				if (prop->getRobotID() == 1)
+				{
+					prop->getValue(&lastConsistentCommandedValue);
+				}
+			}
+			bool commandedChange = true;
+			long tmp;
+			for (auto prop : v->proposals)
+			{
+				if (prop->getRobotID() != 1)
+				{
+					prop->getValue(&tmp);
+					if (tmp > lastConsistentCommandedValue)
+					{
+						commandedChange = false;
+					}
+				}
+			}
+			if (commandedChange)
+			{
+				ie1.addData(time - sendingtime);
+				cout << "TimeForConsistency: " << ie1.toString() << endl;
+			}
+			else
+			{
+				ie2.addData(time - sendingtime);
+				cout << "TimeForConsensus: " << ie2.toString() << endl;
+			}
+		}
 	}
 };
 
 int main(int argc, char **argv)
 {
 	TimeMeasure V1Time;
-	V1Time.cace = Cace::get();
+	if (argc > 1)
+	{
+		V1Time.cace = Cace::getEmulated("", 1);
+	}
+	else
+	{
+		V1Time.cace = Cace::get();
+	}
 
 	string name = "test";
 	V1Time.v1 = make_shared<ConsensusVariable>(name, acceptStrategy::NoDistribution, std::numeric_limits<long>::max(),
@@ -134,9 +178,15 @@ int main(int argc, char **argv)
 
 	V1Time.v1->setAcceptStrategy(acceptStrategy::TwoWayHandShake);
 	V1Time.cace->run();
+	V1Time.cace->communication->startAsynchronous();
+	V1Time.cace->safeStepMode = false;
+	V1Time.count = 0;
+	V1Time.ie1.clear();
+	V1Time.ie2.clear();
 
 	if (argc > 1)
 	{
+		V1Time.initiator = true;
 		// "sender"
 		for (int i = 0; i < 100; i++)
 		{
@@ -147,9 +197,11 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+		V1Time.initiator = false;
 		while (true)
 		{
 			this_thread::sleep_for(chrono::milliseconds(1));
+			//V1Time.cace->step();
 		}
 		// "receiver"
 	}
