@@ -116,7 +116,8 @@ namespace cace
 		 */
 		CommunicationWorker* worker = nullptr;
 
-		double sleepTime = 0.033;
+		//double sleepTime = 0.033;
+		double sleepTime = 0.01;
 #ifdef USE_ROS
 		ros::Timer timer;
 		void rosStep(const ros::TimerEvent&);

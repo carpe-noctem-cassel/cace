@@ -45,7 +45,7 @@ namespace cace
 				if (command->level > acceptStrategy::FireAndForget)
 				{
 					vector<uint8_t> val = cv->getValue();
-					caceCommunication->sendCaceAcknowledge(cv->getName(), val, msgID, 0, cv->getType());
+					caceCommunication->sendCaceAcknowledge(cv->getName(), val, msgID, 0, cv->getType(), lamportTime);
 					lamportTime = cace->timeManager->lamportTime;
 					for (int id : expectedRobotIDs)
 					{
