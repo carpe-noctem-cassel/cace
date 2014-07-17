@@ -149,12 +149,12 @@ public:
 			if (consensus)
 			{
 				ie1.addData(time - sendingtime);
-				cout << "TimeForConsistency: " << ie1.toString() << endl;
+				cout << "TimeForConsensus: " << ie1.toString() << endl;
 			}
 			else
 			{
 				ie2.addData(time - sendingtime);
-				cout << "TimeForConsensus: " << ie2.toString() << endl;
+				cout << "TimeForConsistency: " << ie2.toString() << endl;
 			}
 		}
 	}
