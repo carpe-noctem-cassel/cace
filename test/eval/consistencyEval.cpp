@@ -146,7 +146,7 @@ public:
 			if (lastConsensedValue < curConsistentAckValue)
 			{
 				lastConsensedValue = curConsistentAckValue;
-				newack=true;
+				newack = true;
 			}
 
 			if (newcmd)
@@ -155,70 +155,73 @@ public:
 				cout << "ConsistencyAchieved: " << ie1.toString() << endl;
 			}
 			if (!v->checkConflict(*cace) && (newcmd || newack))
-					{
-
-						ie2.addData(time - sendingtime);
-						cout << "ConsensusAchieved: " << ie2.toString() << endl;
-					}
-
-				}
-			}
-		};
-
-		int main(int argc, char **argv)
-		{
-			TimeMeasure V1Time;
-			if (argc > 1)
 			{
-				V1Time.cace = Cace::getEmulated("", 1);
-			}
-			else
-			{
-				V1Time.cace = Cace::get();
-			}
-			V1Time.cace->agentEngangement(1, false);
-			V1Time.cace->agentEngangement(5, false);
-			V1Time.cace->agentEngangement(6, false);
 
-			string name = "test";
-			V1Time.v1 = make_shared<ConsensusVariable>(name, acceptStrategy::NoDistribution,
-														std::numeric_limits<long>::max(),
-														V1Time.cace->communication->getOwnID(),
-														V1Time.cace->timeManager->getDistributedTime(),
-														V1Time.cace->timeManager->lamportTime, CaceType::Custom);
-			V1Time.cace->caceSpace->addVariable(V1Time.v1, false);
-			V1Time.v1->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V1Time, &TimeMeasure::notifyChange));
-
-			V1Time.v1->setAcceptStrategy(acceptStrategy::ThreeWayHandShake);
-			//V1Time.v1->setAcceptStrategy(acceptStrategy::TwoWayHandShake);
-			V1Time.cace->run();
-			V1Time.cace->communication->startAsynchronous();
-			V1Time.cace->safeStepMode = false;
-			V1Time.count = 0;
-			V1Time.ie1.clear();
-			V1Time.ie2.clear();
-			V1Time.lastConsensedValue = 0;
-			V1Time.lastConsistentValue = 0;
-
-			if (argc > 1)
-			{
-				V1Time.initiator = true;
-				// "sender"
-				for (int i = 0; i < 100; i++)
-				{
-					V1Time.v1->setValue((long)V1Time.cace->timeManager->getLocalTime());
-					V1Time.cace->caceSpace->distributeVariable(V1Time.v1);
-					this_thread::sleep_for(chrono::milliseconds(1000));
-				}
+				ie2.addData(time - sendingtime);
+				cout << "ConsensusAchieved: " << ie2.toString() << endl;
 			}
-			else
-			{
-				V1Time.initiator = false;
-				while (true)
-				{
-					this_thread::sleep_for(chrono::milliseconds(1));
-					//V1Time.cace->step();
-				}
-				// "receiver"
-			}
+
 		}
+	}
+};
+
+int main(int argc, char **argv)
+{
+	TimeMeasure V1Time;
+	if (argc > 1)
+	{
+		V1Time.cace = Cace::getEmulated("", 1);
+	}
+	else
+	{
+		V1Time.cace = Cace::get();
+	}
+	V1Time.cace->agentEngangement(1, false);
+	V1Time.cace->agentEngangement(5, false);
+	V1Time.cace->agentEngangement(6, false);
+
+	string name = "test";
+	V1Time.v1 = make_shared<ConsensusVariable>(name, acceptStrategy::NoDistribution, std::numeric_limits<long>::max(),
+												V1Time.cace->communication->getOwnID(),
+												V1Time.cace->timeManager->getDistributedTime(),
+												V1Time.cace->timeManager->lamportTime, CaceType::Custom);
+	V1Time.cace->caceSpace->addVariable(V1Time.v1, false);
+	V1Time.v1->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V1Time, &TimeMeasure::notifyChange));
+
+	V1Time.v1->setAcceptStrategy(acceptStrategy::ThreeWayHandShake);
+	//V1Time.v1->setAcceptStrategy(acceptStrategy::TwoWayHandShake);
+	V1Time.cace->run();
+	V1Time.cace->communication->startAsynchronous();
+	V1Time.cace->safeStepMode = false;
+	V1Time.count = 0;
+	V1Time.ie1.clear();
+	V1Time.ie2.clear();
+	V1Time.lastConsensedValue = 0;
+	V1Time.lastConsistentValue = 0;
+
+	if (argc > 1)
+	{
+		V1Time.initiator = true;
+		// "sender"
+		for (int i = 0; i < 100; i++)
+		{
+			V1Time.v1->setValue((long)V1Time.cace->timeManager->getLocalTime());
+			V1Time.cace->caceSpace->distributeVariable(V1Time.v1);
+			while (V1Time.cace->worker->count() != 0)
+			{
+				this_thread::sleep_for(chrono::milliseconds(100));
+			}
+			this_thread::sleep_for(chrono::milliseconds(500));
+		}
+	}
+	else
+	{
+		V1Time.initiator = false;
+		while (true)
+		{
+			this_thread::sleep_for(chrono::milliseconds(1));
+			//V1Time.cace->step();
+		}
+		// "receiver"
+	}
+}
