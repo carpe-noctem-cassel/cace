@@ -129,20 +129,24 @@ public:
 					prop->getValue(&lastConsistentCommandedValue);
 				}
 			}
-			bool commandedChange = true;
+			bool consensus = true;
 			long tmp;
+			if (v->proposals.size() != 2)
+			{
+				consensus = false;
+			}
 			for (auto prop : v->proposals)
 			{
 				if (prop->getRobotID() != 1)
 				{
 					prop->getValue(&tmp);
-					if (tmp > lastConsistentCommandedValue)
+					if (tmp != lastConsistentCommandedValue)
 					{
-						commandedChange = false;
+						consensus = false;
 					}
 				}
 			}
-			if (commandedChange)
+			if (consensus)
 			{
 				ie1.addData(time - sendingtime);
 				cout << "TimeForConsistency: " << ie1.toString() << endl;
@@ -167,6 +171,9 @@ int main(int argc, char **argv)
 	{
 		V1Time.cace = Cace::get();
 	}
+	V1Time.cace->agentEngangement(1, false);
+	V1Time.cace->agentEngangement(5, false);
+	V1Time.cace->agentEngangement(6, false);
 
 	string name = "test";
 	V1Time.v1 = make_shared<ConsensusVariable>(name, acceptStrategy::NoDistribution, std::numeric_limits<long>::max(),
@@ -176,7 +183,8 @@ int main(int argc, char **argv)
 	V1Time.cace->caceSpace->addVariable(V1Time.v1, false);
 	V1Time.v1->changeNotify.push_back(delegate<void(ConsensusVariable*)>(&V1Time, &TimeMeasure::notifyChange));
 
-	V1Time.v1->setAcceptStrategy(acceptStrategy::TwoWayHandShake);
+	V1Time.v1->setAcceptStrategy(acceptStrategy::ThreeWayHandShake);
+	//V1Time.v1->setAcceptStrategy(acceptStrategy::TwoWayHandShake);
 	V1Time.cace->run();
 	V1Time.cace->communication->startAsynchronous();
 	V1Time.cace->safeStepMode = false;
