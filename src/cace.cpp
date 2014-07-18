@@ -329,14 +329,14 @@ namespace cace
 
 	void Cace::agentDisengangement(int id)
 	{
-		for (int i = 0; i < activeRobots.size(); i++)
+		/*for (int i = 0; i < activeRobots.size(); i++)
 		{
 			if (activeRobots.at(i) == id)
 			{
 				activeRobots.erase(activeRobots.begin() + i);
 				i--;
 			}
-		}
+		}*/
 	}
 
 	Cace* Cace::getEmulated(string prefix, int id, bool quiet)
