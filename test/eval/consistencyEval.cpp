@@ -114,11 +114,31 @@ public:
 		long sendingtime;
 		v->getValue(&sendingtime);
 
-		if (initiator && v->checkConflict(*cace) && v->proposals.size()>=2)
+		if (initiator && v->checkConflict(*cace) && v->proposals.size() >= 2)
 		{
-			ie1.addData(time - sendingtime);
-			cout << "ConsensusAchieved: " << ie1.toString() << endl;
-			count++;
+			long curConsistentCommandedValue = std::numeric_limits<long>::min();
+			long curConsistentAckValue = std::numeric_limits<long>::min();
+			v->proposals[0]->getValue(&curConsistentCommandedValue);
+			v->proposals[1]->getValue(&curConsistentAckValue);
+
+			bool newcmd = false;
+			bool newack = false;
+			if (lastConsistentValue < curConsistentCommandedValue)
+			{
+				lastConsistentValue = curConsistentCommandedValue;
+				newcmd = true;
+			}
+			if (lastConsensedValue < curConsistentAckValue)
+			{
+				lastConsensedValue = curConsistentAckValue;
+				newack = true;
+			}
+			if (newack || newcmd)
+			{
+				ie1.addData(time - sendingtime);
+				cout << "ConsensusAchieved: " << ie1.toString() << endl;
+				count++;
+			}
 		}
 		if (!initiator)
 		{
@@ -154,7 +174,7 @@ public:
 				ie1.addData(time - sendingtime);
 				cout << "ConsistencyAchieved: " << ie1.toString() << endl;
 			}
-			if (!v->checkConflict(*cace) && (newcmd || newack) && v->proposals.size()>=2)
+			if (!v->checkConflict(*cace) && (newcmd || newack) && v->proposals.size() >= 2)
 			{
 
 				ie2.addData(time - sendingtime);
