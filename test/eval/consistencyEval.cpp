@@ -114,7 +114,7 @@ public:
 		long sendingtime;
 		v->getValue(&sendingtime);
 
-		if (initiator && v->checkConflict(*cace))
+		if (initiator && v->checkConflict(*cace) && && v->proposals.size()>=2)
 		{
 			ie1.addData(time - sendingtime);
 			cout << "ConsensusAchieved: " << ie1.toString() << endl;
@@ -154,7 +154,7 @@ public:
 				ie1.addData(time - sendingtime);
 				cout << "ConsistencyAchieved: " << ie1.toString() << endl;
 			}
-			if (!v->checkConflict(*cace) && (newcmd || newack))
+			if (!v->checkConflict(*cace) && (newcmd || newack) && v->proposals.size()>=2)
 			{
 
 				ie2.addData(time - sendingtime);
