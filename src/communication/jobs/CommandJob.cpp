@@ -96,7 +96,7 @@ namespace cace
 							&& jse.lastSent + cace->timeManager->getEstimatedResendTime(i)
 									< cace->timeManager->getLocalTime() / cace->timeManager->timeResolutionDevisor)
 					{
-						//cout << cace->timeManager->getEstimatedResendTime(i) << endl;
+						cout << cace->timeManager->getEstimatedResendTime(i) << endl;
 						caceCommunication->sendCaceCommand(variable, msgID, value, (short)i, lamportTime);
 						jse.lastSent = cace->timeManager->getLocalTime() / cace->timeManager->timeResolutionDevisor;
 						jse.retrys--;

@@ -114,7 +114,7 @@ public:
 		long sendingtime;
 		v->getValue(&sendingtime);
 
-		if (initiator && v->isAgreed(*cace))
+		if (initiator && v->isAcknowledged(*cace))
 		{
 			ie1.addData(time - sendingtime);
 			cout << "ConsensusAchieved: " << ie1.toString() << endl;
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
 	V1Time.lastConsensedValue = 0;
 	V1Time.lastConsistentValue = 0;
 
-	this_thread::sleep_for(chrono::milliseconds(10000));
+	this_thread::sleep_for(chrono::milliseconds(30000));
 
 	if (argc > 1)
 	{

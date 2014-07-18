@@ -77,6 +77,7 @@ namespace cace
 			{
 				if ((*it)->failed())
 				{
+					cout << "failed" << endl;
 					agentsToRemove.insert(agentsToRemove.end(), (*it)->expectedRobotIDs.begin(),
 											(*it)->expectedRobotIDs.end());
 				}
