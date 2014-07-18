@@ -107,12 +107,12 @@ namespace cace
 					}
 				}
 			}
-			cout << remainingRetrys << "\t";
+			/*cout << remainingRetrys << "\t";
 			for (JobStateEntity& jse : this->entities)
 			{
 				cout << jse.retrys << "\t";
 			}
-			cout << endl;
+			cout << endl;*/
 		}
 
 		return expectedRobotIDs.size() == 0 || remainingRetrys <= 0

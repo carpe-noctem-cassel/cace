@@ -114,7 +114,7 @@ public:
 		long sendingtime;
 		v->getValue(&sendingtime);
 
-		if (initiator && v->isAcknowledged(*cace))
+		if (initiator && v->checkConflict(*cace))
 		{
 			ie1.addData(time - sendingtime);
 			cout << "ConsensusAchieved: " << ie1.toString() << endl;
