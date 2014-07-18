@@ -8,6 +8,8 @@
 #include <caceSpace.h>
 #include <communication/CaceCommunication.h>
 #include <communication/CommunicationWorker.h>
+#include <communication/CaceCommunicationMultiCast.h>
+#include <communication/multicast/CaceMultiCastChannel.h>
 #include <communication/jobs/AbstractCommunicationJob.h>
 #include <communication/jobs/CommandJob.h>
 #include <communication/JobStateEntity.h>
@@ -135,6 +137,7 @@ public:
 			}
 			if (newack || newcmd)
 			{
+				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic << endl;
 				ie1.addData(time - sendingtime);
 				cout << "ConsensusAchieved: " << ie1.toString() << endl;
 				count++;
@@ -171,12 +174,13 @@ public:
 
 			if (newcmd)
 			{
+				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic << endl;
 				ie1.addData(time - sendingtime);
 				cout << "ConsistencyAchieved: " << ie1.toString() << endl;
 			}
 			if (!v->checkConflict(*cace) && (newcmd || newack) && v->proposals.size() >= 2)
 			{
-
+				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic << endl;
 				ie2.addData(time - sendingtime);
 				cout << "ConsensusAchieved: " << ie2.toString() << endl;
 			}

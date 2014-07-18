@@ -27,6 +27,7 @@ namespace cacemulticast
 	class CaceMultiCastChannel
 	{
 	public:
+		static long traffic;
 		CaceMultiCastChannel(string address, unsigned short port, t_multicastcallback<CommunicationClass> callback,
 								CommunicationClass* obj);
 		~CaceMultiCastChannel();
@@ -47,6 +48,8 @@ namespace cacemulticast
 
 	template<class CommunicationClass>
 	unsigned short CaceMultiCastChannel<CommunicationClass>::sourcePort = 30000;
+	template<class CommunicationClass>
+	long CaceMultiCastChannel<CommunicationClass>::traffic = 0;
 
 	template<class CommunicationClass>
 	inline CaceMultiCastChannel<CommunicationClass>::CaceMultiCastChannel(
@@ -85,6 +88,7 @@ namespace cacemulticast
 	inline void CaceMultiCastChannel<CommunicationClass>::publish(const char* bytes, int size)
 	{
 		udpsocket.sendTo(bytes, size, address, port);
+		traffic+=size;
 	}
 
 	template<class CommunicationClass>
