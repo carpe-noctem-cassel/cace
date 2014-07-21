@@ -116,7 +116,7 @@ public:
 		long sendingtime;
 		v->getValue(&sendingtime);
 
-		if (initiator && v->checkConflict(*cace) && v->proposals.size() >= 2)
+		if (initiator && !v->checkConflict(*cace) && v->proposals.size() >= 2)
 		{
 			long curConsistentCommandedValue = std::numeric_limits<long>::min();
 			long curConsistentAckValue = std::numeric_limits<long>::min();
@@ -229,7 +229,7 @@ int main(int argc, char **argv)
 	{
 		V1Time.initiator = true;
 		// "sender"
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 1000; i++)
 		{
 			V1Time.v1->setValue((long)V1Time.cace->timeManager->getLocalTime());
 			V1Time.cace->caceSpace->distributeVariable(V1Time.v1);
@@ -237,7 +237,7 @@ int main(int argc, char **argv)
 			{
 				this_thread::sleep_for(chrono::milliseconds(100));
 			}
-			this_thread::sleep_for(chrono::milliseconds(500));
+			this_thread::sleep_for(chrono::milliseconds(1500));
 		}
 	}
 	else

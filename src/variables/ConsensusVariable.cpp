@@ -28,8 +28,9 @@ namespace cace
 		this->robotID = v.robotID;
 		this->type = v.type;
 		this->validityTime = v.validityTime;
-		this->val = v.val;
 		this->arrivalTime = v.arrivalTime;
+		lock_guard<std::mutex> lock(valueMutex);
+		this->val = v.val;
 	}
 	ConsensusVariable::ConsensusVariable(string name, acceptStrategy strategy, unsigned long validityTime, int robotID,
 											unsigned long decissionTime, unsigned long lamportAge, short type)
@@ -48,8 +49,6 @@ namespace cace
 	void ConsensusVariable::update(ConsensusVariable& v)
 	{
 		this->name = string(v.getName());
-		this->val = vector<uint8_t>(v.val);
-		hasValue = val.size() > 0;
 		this->arrivalTime = v.arrivalTime;
 		this->setAcceptStrategy(v.strategy);
 		if (v.validityTime != std::numeric_limits<long>::max())
@@ -61,11 +60,15 @@ namespace cace
 		if (v.type != 0)
 			this->type = v.type;
 
+		lock_guard<std::mutex> lock(valueMutex);
+		this->val = vector<uint8_t>(v.val);
+		hasValue = val.size() > 0;
 		//notifies all subscribers about change
 		//notify();
 	}
 	bool ConsensusVariable::valueEqual(vector<uint8_t>* cmp)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		if (!hasValue && cmp == nullptr)
 		{
 			return true;
@@ -142,11 +145,13 @@ namespace cace
 
 	vector<uint8_t> ConsensusVariable::getValue()
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		return val;
 	}
 
 	void ConsensusVariable::setValue(vector<uint8_t> value)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		val = value;
 		if (value.size() > 0)
 		{
@@ -475,6 +480,7 @@ namespace cace
 
 	bool ConsensusVariable::getValue(double* out)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		if (type == CaceType::CDouble)
 		{
 			*out = deserialize<double>(val);
@@ -483,6 +489,7 @@ namespace cace
 	}
 	void ConsensusVariable::setValue(double in)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		val.clear();
 		serialize(in, val);
 		hasValue = true;
@@ -491,6 +498,7 @@ namespace cace
 
 	bool ConsensusVariable::getValue(int* out)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		if (type == CaceType::CInt)
 		{
 			*out = deserialize<int>(val);
@@ -500,6 +508,7 @@ namespace cace
 
 	void ConsensusVariable::setValue(int in)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		val.clear();
 		serialize(in, val);
 		hasValue = true;
@@ -508,6 +517,7 @@ namespace cace
 
 	bool ConsensusVariable::getValue(long* out)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		if (type == CaceType::CLong)
 		{
 			*out = deserialize<long>(val);
@@ -517,6 +527,7 @@ namespace cace
 
 	void ConsensusVariable::setValue(long in)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		val.clear();
 		serialize(in, val);
 		hasValue = true;
@@ -525,6 +536,7 @@ namespace cace
 
 	bool ConsensusVariable::getValue(string& out)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		if (type == CaceType::CString)
 		{
 			out = deserialize<string>(val);
@@ -534,6 +546,7 @@ namespace cace
 
 	void ConsensusVariable::setValue(string* in)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		val.clear();
 		serialize(*in, val);
 		hasValue = true;
@@ -542,6 +555,7 @@ namespace cace
 
 	bool ConsensusVariable::getValue(vector<double>& out)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		if (type == CaceType::CDoubleList)
 		{
 			out = deserialize<vector<double>>(val);
@@ -551,6 +565,7 @@ namespace cace
 
 	void ConsensusVariable::setValue(vector<double>* in)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		val.clear();
 		serialize(*in, val);
 		hasValue = true;
@@ -559,6 +574,7 @@ namespace cace
 
 	bool ConsensusVariable::getValue(vector<int>& out)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		if (type == CaceType::CIntList)
 		{
 			out = deserialize<vector<int>>(val);
@@ -568,6 +584,7 @@ namespace cace
 
 	void ConsensusVariable::setValue(vector<int>* in)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		val.clear();
 		serialize(*in, val);
 		hasValue = true;
@@ -576,6 +593,7 @@ namespace cace
 
 	bool ConsensusVariable::getValue(vector<string>& out)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		if (type == CaceType::CStringList)
 		{
 			out = deserialize<vector<string>>(val);
@@ -585,6 +603,7 @@ namespace cace
 
 	void ConsensusVariable::setValue(vector<string>* in)
 	{
+		lock_guard<std::mutex> lock(valueMutex);
 		val.clear();
 		serialize(*in, val);
 		hasValue = true;

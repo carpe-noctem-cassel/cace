@@ -330,7 +330,7 @@ TEST_F(SpeedEval, MulticastDelay)
 	//int tries = 1000;
 	IncrementalEstimator ie;
 
-	for (int curSize = 0; curSize < 65536; curSize += 200)
+	for (int curSize = 30000; curSize < 65536; curSize += 200)
 	{
 		ie.clear();
 		for (int i = 0; i < tries; i++)

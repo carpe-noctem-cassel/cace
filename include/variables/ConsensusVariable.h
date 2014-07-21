@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <mutex>
 
 #include <cace/CaceType.h>
 
@@ -31,6 +32,11 @@ namespace cace
 	class ConsensusVariable
 	{
 	public:
+		/*!
+		 * Mutex for write operations on variable value
+		 */
+		mutex valueMutex;
+
 		/*!
 		 * Copy Constructor (only copys references)
 		 */
@@ -190,6 +196,7 @@ namespace cace
 		template<class T>
 		inline void setValue(const T& obj)
 		{
+			lock_guard<std::mutex> lock(valueMutex);
 			val.clear();
 			serialize(obj, val);
 			type = CaceType::Custom;
@@ -201,6 +208,7 @@ namespace cace
 		template<class T>
 		inline bool getValue(T& obj)
 		{
+			lock_guard<std::mutex> lock(valueMutex);
 			if (type == CaceType::Custom)
 			{
 				obj = deserialize<T>(val);
