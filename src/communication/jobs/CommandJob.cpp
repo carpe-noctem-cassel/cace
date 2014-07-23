@@ -116,7 +116,7 @@ namespace cace
 		}
 
 		return expectedRobotIDs.size() == 0 || remainingRetrys <= 0
-				|| variable->getAcceptStrategy() <= acceptStrategy::NoDistribution;
+				|| variable->getAcceptStrategy() <= acceptStrategy::FireAndForget;
 	}
 
 	bool CommandJob::failed()

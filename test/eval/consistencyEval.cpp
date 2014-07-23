@@ -104,7 +104,7 @@ public:
 	}
 	Cace *cace;bool initiator;
 	shared_ptr<ConsensusVariable> v1;
-	unsigned long time;
+	long time;
 	int count = 0;
 	IncrementalEstimator ie1;
 	IncrementalEstimator ie2;
@@ -137,9 +137,17 @@ public:
 			}
 			if (newack || newcmd)
 			{
-				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic << endl;
-				ie1.addData(time - sendingtime);
-				cout << "ConsensusAchieved: " << ie1.toString() << endl;
+				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic
+						<< endl;
+				if (time > sendingtime)
+				{
+					ie1.addData(time - sendingtime);
+					cout << "ConsensusAchieved: " << ie1.toString() << endl;
+				}
+				else
+				{
+					cout << "---------------------------------------------------------------" << endl;
+				}
 				count++;
 			}
 		}
@@ -174,13 +182,15 @@ public:
 
 			if (newcmd)
 			{
-				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic << endl;
+				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic
+						<< endl;
 				ie1.addData(time - sendingtime);
 				cout << "ConsistencyAchieved: " << ie1.toString() << endl;
 			}
 			if (!v->checkConflict(*cace) && (newcmd || newack) && v->proposals.size() >= 2)
 			{
-				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic << endl;
+				cout << "Traffic[bytes]: " << cacemulticast::CaceMultiCastChannel<CaceCommunicationMultiCast>::traffic
+						<< endl;
 				ie2.addData(time - sendingtime);
 				cout << "ConsensusAchieved: " << ie2.toString() << endl;
 			}
