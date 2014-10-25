@@ -141,7 +141,7 @@ protected:
 		CaceAcknowledgePtr ack = boost::make_shared<CaceAcknowledge>();
 		ack->lamportTime = variable->getLamportAge() + 1;
 		ack->msgID = job->msgID;
-		ack->receiverID = mycace->communication->getOwnID();
+		ack->receiverID.push_back(mycace->communication->getOwnID());
 		ack->senderID = 20;
 		ack->type = type;
 		ack->value = value;
@@ -169,7 +169,7 @@ protected:
 
 		ack2->lamportTime = 0;
 		ack2->msgID = job->msgID;
-		ack2->receiverID = mycace->communication->getOwnID();
+		ack2->receiverID.push_back(mycace->communication->getOwnID());
 		ack2->senderID = 20;
 		ack2->type = type;
 
@@ -267,7 +267,7 @@ protected:
 		CaceAcknowledgePtr ack = boost::make_shared<CaceAcknowledge>();
 		ack->lamportTime = variable->getLamportAge() + 1;
 		ack->msgID = job->msgID;
-		ack->receiverID = mycace->communication->getOwnID();
+		ack->receiverID.push_back(mycace->communication->getOwnID());
 		ack->senderID = 20;
 		ack->type = type;
 		ack->value = value;
@@ -293,7 +293,7 @@ protected:
 		CaceAcknowledgePtr ack2 = boost::make_shared<CaceAcknowledge>();
 		ack2->lamportTime = 0;
 		ack2->msgID = job->msgID;
-		ack2->receiverID = mycace->communication->getOwnID();
+		ack2->receiverID.push_back(mycace->communication->getOwnID());
 		ack2->senderID = 20;
 		ack2->type = type;
 
@@ -699,7 +699,7 @@ TEST_F(CaceBasics, CommandArrival)
 
 	cmd->lamportTime = 2;
 	cmd->msgID = 100;
-	cmd->receiverID = mycace->communication->getOwnID();
+	cmd->receiverID.push_back(mycace->communication->getOwnID());
 	cmd->senderID = 20;
 	cmd->type = type;
 	cmd->value = value;

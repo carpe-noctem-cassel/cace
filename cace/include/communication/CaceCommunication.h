@@ -202,7 +202,8 @@ namespace cace
 		 * Note, also includes the ownID, as packages from ourself are ignored
 		 */
 		set<int> agentBlacklist;
-		int ownID;
+		int16_t ownID;
+		static const int16_t broadcastID;
 	protected:
 		CaceCommunication();
 
@@ -223,6 +224,8 @@ namespace cace
 		Cace* cace;
 
 		mutex blacklistMutex;
+
+		bool includesID(vector<int16_t>& idList, const int16_t& idToSearchFor);
 	};
 
 } /* namespace cace */

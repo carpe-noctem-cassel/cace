@@ -117,7 +117,8 @@ namespace cace
 		cace->timeManager->lamportTime++;
 		CaceVariableRequest cvr;
 		cvr.senderID = ownID;
-		cvr.receiverID = receiverID;
+		//cvr.receiverID = receiverID;
+		cvr.receiverID.push_back(receiverID);
 		cvr.msgID = msgID;
 		cvr.variableName = name;
 
@@ -137,7 +138,8 @@ namespace cace
 		cc.variableName = cv->getName();
 		cc.senderID = ownID;
 		//Broadcast
-		cc.receiverID = receiver;
+		//cc.receiverID = receiver;
+		cc.receiverID.push_back(receiver);
 		cc.type = (char)cv->getType();
 
 		responsePublisher.publish(cc);
@@ -155,7 +157,8 @@ namespace cace
 		cc.value = cv->getValue();
 		cc.variableName = cv->getName();
 		cc.senderID = ownID;
-		cc.receiverID = receiver;
+		//cc.receiverID = receiver;
+		cc.receiverID.push_back(receiver);
 		cc.type = (char)cv->getType();
 
 		writePublisher.publish(cc);
@@ -174,7 +177,8 @@ namespace cace
 		cc.variableName = cv->getName();
 		cc.senderID = ownID;
 		//Broadcast
-		cc.receiverID = receiver;
+		//cc.receiverID = receiver;
+		cc.receiverID.push_back(receiver);
 		cc.type = (char)cv->getType();
 
 		commandPublisher.publish(cc);
@@ -188,7 +192,8 @@ namespace cace
 		ca.lamportTime = lamportTime;
 		ca.msgID = messageID;
 		ca.senderID = ownID;
-		ca.receiverID = receiver;
+		//ca.receiverID = receiver;
+		ca.receiverID.push_back(receiver);
 		ca.type = (char)type;
 
 		//is This a problem?
@@ -210,7 +215,8 @@ namespace cace
 		cbn.value = cv->getValue();
 		cbn.variableName = cv->getName();
 		cbn.senderID = ownID;
-		cbn.receiverID = receiverID;
+		//cbn.receiverID = receiverID;
+		cbn.receiverID.push_back(receiverID);
 		cbn.type = (char)cv->getType();
 
 		notificationPublisher.publish(cbn);
@@ -223,7 +229,8 @@ namespace cace
 		sa.lamportTime = lamportTime;
 		sa.msgID = messageID;
 		sa.senderID = ownID;
-		sa.receiverID = receiver;
+		//sa.receiverID = receiver;
+		sa.receiverID.push_back(receiver);
 		sa.variableName = name;
 
 		writeAckPublisher.publish(sa);
@@ -236,7 +243,8 @@ namespace cace
 		sa.lamportTime = lamportTime;
 		sa.msgID = messageID;
 		sa.senderID = ownID;
-		sa.receiverID = receiver;
+		//sa.receiverID = receiver;
+		sa.receiverID.push_back(receiver);
 		sa.variableName = name;
 
 		shortAckPublisher.publish(sa);

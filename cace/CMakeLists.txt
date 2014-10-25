@@ -139,28 +139,31 @@ set_target_properties(${PROJECT_NAME}-test PROPERTIES LINK_FLAGS "-ftest-coverag
 set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
 #set_target_properties(${PROJECT_NAME}-test PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g -DUSE_ROS")
 
-
-catkin_add_gtest(${PROJECT_NAME}-eval ${_my_sources} test/eval/speed.cpp)
-include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}-eval ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-set_target_properties(${PROJECT_NAME}-eval PROPERTIES LINK_FLAGS "-O5")
-set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-O5  -mtune=native -lrt -ftree-vectorize -msse3 -ffast-math -O3 -funroll-loops -fomit-frame-pointer")
-#set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-O5 -DUSE_ROS")
-
-
-catkin_add_gtest(${PROJECT_NAME}-timeeval ${_my_sources} test/eval/timeEval.cpp)
-include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}-timeeval ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES LINK_FLAGS "-O5")
-set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES COMPILE_FLAGS "-O5  -mtune=native -lrt -ftree-vectorize -msse3 -ffast-math -O3 -funroll-loops -fomit-frame-pointer")
-#set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES COMPILE_FLAGS "-O5 -DUSE_ROS")
-
-catkin_add_gtest(${PROJECT_NAME}-consistencytest  test/eval/consistencyEval.cpp)
-target_link_libraries(${PROJECT_NAME}-consistencytest ${PROJECT_NAME} ${catkin_LIBRARIES})
-set_target_properties(${PROJECT_NAME}-consistencytest PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
-set_target_properties(${PROJECT_NAME}-consistencytest PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
-
-
-
+##### The next lines are evaluation-"tests" not required during normal use #####
+#catkin_add_gtest(${PROJECT_NAME}-eval ${_my_sources} test/eval/speed.cpp)
+#include_directories(${Boost_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME}-eval ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#set_target_properties(${PROJECT_NAME}-eval PROPERTIES LINK_FLAGS "-O5")
+#set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-O5  -mtune=native -lrt -ftree-vectorize -msse3 -ffast-math -O3 -funroll-loops -fomit-frame-pointer")
+##set_target_properties(${PROJECT_NAME}-eval PROPERTIES COMPILE_FLAGS "-O5 -DUSE_ROS")
+#
+#
+#catkin_add_gtest(${PROJECT_NAME}-timeeval ${_my_sources} test/eval/timeEval.cpp)
+#include_directories(${Boost_INCLUDE_DIRS})
+#target_link_libraries(${PROJECT_NAME}-timeeval ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES LINK_FLAGS "-O5")
+#set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES COMPILE_FLAGS "-O5  -mtune=native -lrt -ftree-vectorize -msse3 -ffast-math -O3 -funroll-loops -fomit-frame-pointer")
+##set_target_properties(${PROJECT_NAME}-timeeval PROPERTIES COMPILE_FLAGS "-O5 -DUSE_ROS")
+#
+#catkin_add_gtest(${PROJECT_NAME}-consistencytest  test/eval/consistencyEval.cpp)
+#target_link_libraries(${PROJECT_NAME}-consistencytest ${PROJECT_NAME} ${catkin_LIBRARIES})
+#set_target_properties(${PROJECT_NAME}-consistencytest PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
+#set_target_properties(${PROJECT_NAME}-consistencytest PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
+#
+#catkin_add_gtest(${PROJECT_NAME}-scalabilitytest  test/eval/scalability.cpp)
+#target_link_libraries(${PROJECT_NAME}-scalabilitytest ${PROJECT_NAME} ${catkin_LIBRARIES})
+#set_target_properties(${PROJECT_NAME}-scalabilitytest PROPERTIES LINK_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
+#set_target_properties(${PROJECT_NAME}-scalabilitytest PROPERTIES COMPILE_FLAGS "-ftest-coverage -fprofile-arcs --coverage -g")
+####################################################################################
 endif()
 # catkin_add_nosetests(test)

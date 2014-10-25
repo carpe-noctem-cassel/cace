@@ -201,7 +201,8 @@ namespace cace
 		cace->timeManager->lamportTime++;
 		CaceVariableRequest val;
 		val.senderID = ownID;
-		val.receiverID = receiverID;
+		//val.receiverID = receiverID;
+		val.receiverID.push_back(receiverID);
 		val.msgID = msgID;
 		val.variableName = name;
 
@@ -226,7 +227,8 @@ namespace cace
 		cc.variableName = cv->getName();
 		cc.senderID = ownID;
 		//Broadcast
-		cc.receiverID = receiver;
+		//cc.receiverID = receiver;
+		cc.receiverID.push_back(receiver);
 		cc.type = (char)cv->getType();
 
 		uint32_t serial_size = ros::serialization::serializationLength(cc);
@@ -249,7 +251,8 @@ namespace cace
 		cc.value = cv->getValue();
 		cc.variableName = cv->getName();
 		cc.senderID = ownID;
-		cc.receiverID = receiver;
+		//cc.receiverID = receiver;
+		cc.receiverID.push_back(receiver);
 		cc.type = (char)cv->getType();
 
 		uint32_t serial_size = ros::serialization::serializationLength(cc);
@@ -274,7 +277,8 @@ namespace cace
 		cc.variableName = cv->getName();
 		cc.senderID = ownID;
 		//Broadcast
-		cc.receiverID = receiver;
+		//cc.receiverID = receiver;
+		cc.receiverID.push_back(receiver);
 		cc.type = (char)cv->getType();
 
 		uint32_t serial_size = ros::serialization::serializationLength(cc);
@@ -293,7 +297,8 @@ namespace cace
 		ca.lamportTime = lamportTime;
 		ca.msgID = messageID;
 		ca.senderID = ownID;
-		ca.receiverID = receiver;
+		//ca.receiverID = receiver;
+		ca.receiverID.push_back(receiver);
 		ca.type = (char)type;
 
 		//is This a problem?
@@ -320,7 +325,8 @@ namespace cace
 		cbn.value = cv->getValue();
 		cbn.variableName = cv->getName();
 		cbn.senderID = ownID;
-		cbn.receiverID = receiverID;
+		//cbn.receiverID = receiverID;
+		cbn.receiverID.push_back(receiverID);
 		cbn.type = (char)cv->getType();
 
 		uint32_t serial_size = ros::serialization::serializationLength(cbn);
@@ -338,7 +344,8 @@ namespace cace
 		sa.lamportTime = lamportTime;
 		sa.msgID = messageID;
 		sa.senderID = ownID;
-		sa.receiverID = receiver;
+		//sa.receiverID = receiver;
+		sa.receiverID.push_back(receiver);
 		sa.variableName = name;
 
 		uint32_t serial_size = ros::serialization::serializationLength(sa);
@@ -356,7 +363,8 @@ namespace cace
 		sa.lamportTime = lamportTime;
 		sa.msgID = messageID;
 		sa.senderID = ownID;
-		sa.receiverID = receiver;
+		//sa.receiverID = receiver;
+		sa.receiverID.push_back(receiver);
 		sa.variableName = name;
 
 		uint32_t serial_size = ros::serialization::serializationLength(sa);

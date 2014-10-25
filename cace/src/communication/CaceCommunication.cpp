@@ -22,6 +22,7 @@
 
 namespace cace
 {
+	const int16_t CaceCommunication::broadcastID = 0;
 
 	CaceCommunication::CaceCommunication()
 	{
@@ -158,7 +159,8 @@ namespace cace
 			return;
 		//0 is broadcast
 
-		if (cvr->receiverID == 0 || cvr->receiverID == ownID)
+		//if (cvr->receiverID == 0 || cvr->receiverID == ownID)
+		if (includesID(cvr->receiverID, broadcastID) || includesID(cvr->receiverID, ownID))
 		{
 			if (cace->variableStore->existsVariable(cvr->variableName))
 			{
@@ -182,7 +184,8 @@ namespace cace
 		}
 		cace->timeManager->updateLamportTime(cc->lamportTime);
 		//0 is broadcast
-		if (cc->receiverID == 0 || cc->receiverID == ownID)
+		//if (cc->receiverID == 0 || cc->receiverID == ownID)
+		if (includesID(cc->receiverID, broadcastID) || includesID(cc->receiverID, ownID))
 		{
 			auto cv = make_shared<ConsensusVariable>(cc->variableName, (acceptStrategy)cc->level, cc->validityTime,
 														cc->senderID, cc->decissionTime, cc->lamportTime,
@@ -205,7 +208,8 @@ namespace cace
 		}
 		cace->timeManager->updateLamportTime(cc->lamportTime);
 		//0 is broadcast
-		if (cc->receiverID == 0 || cc->receiverID == ownID)
+		//if (cc->receiverID == 0 || cc->receiverID == ownID)
+		if (includesID(cc->receiverID, broadcastID) || includesID(cc->receiverID, ownID))
 		{
 			shared_ptr<ConsensusVariable> ptr;
 			vector<int> empty;
@@ -228,7 +232,8 @@ namespace cace
 			return;
 		}
 		cace->timeManager->updateLamportTime(ca->lamportTime);
-		if (ca->receiverID == 0 || ca->receiverID == ownID)
+		//if (ca->receiverID == 0 || ca->receiverID == ownID)
+		if (includesID(ca->receiverID, broadcastID) || includesID(ca->receiverID, ownID))
 		{
 			lock_guard<std::mutex> lock(wackMutex);
 			{
@@ -246,14 +251,16 @@ namespace cace
 		}
 		cace->timeManager->updateLamportTime(cc->lamportTime);
 		//0 is broadcast
-		if (cc->receiverID == 0 || cc->receiverID == ownID)
+		//if (cc->receiverID == 0 || cc->receiverID == ownID)
+		if (includesID(cc->receiverID, broadcastID) || includesID(cc->receiverID, ownID))
 		{
 			//lock_guard<std::mutex> lock(cmdMutex);
 			{
 				vector<int> nall = cace->activeRobots;
 				shared_ptr<ConsensusVariable> np;
 				worker->appendJob(
-						new CommandAcknowledgeJob(cc->variableName, np, nall, cace->timeManager->lamportTime, cace, cc));
+						new CommandAcknowledgeJob(cc->variableName, np, nall, cace->timeManager->lamportTime, cace,
+													cc));
 				//commands.push_back(cc);
 			}
 		}
@@ -287,7 +294,8 @@ namespace cace
 		}
 		cace->timeManager->updateLamportTime(ca->lamportTime);
 		//Can this be done somewhere else?
-		if (ca->receiverID == 0 || ca->receiverID == ownID)
+		//if (ca->receiverID == 0 || ca->receiverID == ownID)
+		if (includesID(ca->receiverID, broadcastID) || includesID(ca->receiverID, ownID))
 		{
 			shared_ptr<ConsensusVariable> ptr;
 			vector<int> empty;
@@ -352,7 +360,8 @@ namespace cace
 			return;
 		}
 		cace->timeManager->updateLamportTime(cbn->lamportTime);
-		if (cbn->receiverID == 0 || cbn->receiverID == ownID)
+		//if (cbn->receiverID == 0 || cbn->receiverID == ownID)includesID
+		if (includesID(cbn->receiverID, broadcastID) || includesID(cbn->receiverID, ownID))
 		{
 			lock_guard<std::mutex> lock(notMutex);
 			{
@@ -403,7 +412,8 @@ namespace cace
 		}
 
 		cace->timeManager->updateLamportTime(sa->lamportTime);
-		if (sa->receiverID == 0 || sa->receiverID == ownID)
+		//if (sa->receiverID == 0 || sa->receiverID == ownID)includesID
+		if (includesID(sa->receiverID, broadcastID) || includesID(sa->receiverID, ownID))
 		{
 			lock_guard<std::mutex> lock(sackMutex);
 			{
@@ -467,5 +477,10 @@ namespace cace
 		lock_guard<std::mutex> lock4(notMutex);
 		return "Commands: " + to_string(commands.size()) + "\tAcks: " + to_string(acknowledges.size()) + "\tShortAcks: "
 				+ to_string(shortAcks.size()) + "\tNotifications: " + to_string(believeNotifications.size());
+	}
+
+	bool CaceCommunication::includesID(vector<int16_t>& idList, const int16_t& idToSearchFor)
+	{
+		return std::find(idList.begin(), idList.end(), idToSearchFor)!=idList.end();
 	}
 } /* namespace cace */

@@ -305,7 +305,7 @@ TEST_F(JobTests, BAckJob)
 	cc->lamportTime = cace->timeManager->lamportTime + 5;
 	cc->level = strategy;
 	cc->msgID = 100;
-	cc->receiverID = cace->communication->getOwnID();
+	cc->receiverID.push_back(cace->communication->getOwnID());
 	cc->senderID = 20;
 	cc->type = type;
 	cc->validityTime = std::numeric_limits<long>::max();
@@ -368,7 +368,7 @@ TEST_F(JobTests, AckJob)
 	cc->lamportTime = cace->timeManager->lamportTime + 5;
 	cc->level = strategy;
 	cc->msgID = 100;
-	cc->receiverID = cace->communication->getOwnID();
+	cc->receiverID.push_back(cace->communication->getOwnID());
 	cc->senderID = 20;
 	cc->type = type;
 	cc->validityTime = std::numeric_limits<long>::max();

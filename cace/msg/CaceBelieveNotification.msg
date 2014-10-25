@@ -1,5 +1,5 @@
 int16 senderID
-int16 receiverID
+int16[] receiverID
 string variableName
 uint8[] value
 uint64 decissionTime
