@@ -113,7 +113,7 @@ file (GLOB _my_sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/communication/*.
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(alica_engine_node alica_engine_generate_messages_cpp)
 
-add_dependencies(${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME} ${catkin_LIBRARIES} ${PROJECT_NAME}_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}
