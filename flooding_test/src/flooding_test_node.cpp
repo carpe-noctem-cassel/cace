@@ -22,7 +22,7 @@ int ownID=0;
  */
 void messageCallback(flooding_test::TestMessagePtr msg)
 {
-  cout << "I heard: " << to_string(msg->id) << " from NodeID: " << ownID << endl;;
+  cout << "I heard: " << to_string(msg->id) << " from NodeID: " << msg->sender << endl;
 }
 
 
@@ -102,6 +102,11 @@ int main(int argc, char **argv)
    * a unique string for each message.
    */
   int count = 0;
+
+  if(ownID == 3) {
+	  cout << "send a message" << endl;
+  }
+
   while (ros::ok())
   {
 	ros::spinOnce();
@@ -110,7 +115,6 @@ int main(int argc, char **argv)
      */
     flooding_test::TestMessage msg;
 
-    std::stringstream ss;
     msg.id = count;
     msg.sender = ownID;
 
