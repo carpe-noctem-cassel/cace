@@ -20,10 +20,12 @@
 #include <ros/subscriber.h>
 #include <SystemConfig.h>
 #include <Configuration.h>
+#include <cace.h>
 
 using namespace alica;
+using namespace cace;
 
-namespace alicaRosProxy
+namespace alicaCaceProxy
 {
 
 	AlicaCaceCommunication::AlicaCaceCommunication(AlicaEngine* ae) :

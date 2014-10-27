@@ -8,12 +8,13 @@
 #include "clock/AlicaCaceClock.h"
 #include "ros/time.h"
 
-namespace alicaRosProxy
+namespace alicaCaceProxy
 {
 
-	AlicaCaceClock::AlicaCaceClock()
+	AlicaCaceClock::AlicaCaceClock(Cace* cace)
 	{
 		ros::Time::init();
+		this->cace = cace;
 	}
 
 	AlicaCaceClock::~AlicaCaceClock()

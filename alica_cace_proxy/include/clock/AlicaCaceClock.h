@@ -9,17 +9,22 @@
 #define ALICAROSCLOCK_H_
 
 #include <engine/IAlicaClock.h>
+#include <cace.h>
 
-namespace alicaRosProxy
+using namespace cace;
+
+namespace alicaCaceProxy
 {
 
 	class AlicaCaceClock : public virtual alica::IAlicaClock
 	{
 	public:
-		AlicaCaceClock();
+		AlicaCaceClock(Cace* cace);
 		virtual ~AlicaCaceClock();
 		virtual alica::alicaTime now();
 		virtual void sleep(long us);
+	private:
+		Cace* cace;
 	};
 
 } /* namespace supplementary */

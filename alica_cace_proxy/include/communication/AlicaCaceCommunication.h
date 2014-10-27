@@ -20,7 +20,7 @@
 
 using namespace alica;
 
-namespace alicaRosProxy
+namespace alicaCaceProxy
 {
 
 	class AlicaCaceCommunication : public alica::IAlicaCommunication
