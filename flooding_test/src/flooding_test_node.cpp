@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 {
 
 	if(argc < 2) {
-		cout << "Usage: [Executable] [Node_ID]" << endl;
+		cout << "Usage: [Executable] [Node_ID] [Nodename]" << endl;
 		return 0;
 	}
 	ownID = std::atoi(argv[1]);
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
    * You must call one of the versions of ros::init() before using any other
    * part of the ROS system.
    */
-  ros::init(argc, argv, "flooding_test_node");
+  ros::init(argc, argv, (string("flooding_test_node")+argv[2]).c_str());
 
   /**
    * NodeHandle is the main access point to communications with the ROS system.
