@@ -23,8 +23,7 @@ ros::Publisher chatter_pub;
  * This tutorial demonstrates simple receipt of messages over the ROS system.
  */
 void messageCallback(flooding_test::TestMessagePtr msg) {
-	cout << "I heard: " << to_string(msg->id) << " from NodeID: " << msg->sender
-				<< endl;
+	cout << "I heard message ID: " << to_string(msg->id) << endl;
 	float c = 2;
 	float mdeg = 3;
 	float p, p0;
@@ -36,11 +35,11 @@ void messageCallback(flooding_test::TestMessagePtr msg) {
 
 	//msg->id = rand();
 	//msg->sender = floodingNode::nodeID;
-	if (p <= 1 && p >= 0 && p0 <= 1 && p0 >= 0) {
+	if (p <= 1 && p >= 0 && p0 <= 1 && p0 >= 0 && nodeID!=3) {
 
 		if (p > p0 && floodingNode::count == 1) {
 			floodingNode::chatter_pub.publish(msg);
-			cout << "sending message  " << to_string(msg->id) << endl;
+			cout << "sending message ID " << to_string(msg->id) <<endl;
 		}
 		else {
 
@@ -49,17 +48,17 @@ void messageCallback(flooding_test::TestMessagePtr msg) {
 
 			if (floodingNode::count < c && p > p0) {
 				floodingNode::chatter_pub.publish(msg);
-				cout << "sending message  " << to_string(msg->id) << endl;
+				cout << "sending message ID " << to_string(msg->id) << endl;
 			} else {
 				p = ((c - floodingNode::count) / (mdeg - floodingNode::count));
 				p0 = 1 - p;
 				if (floodingNode::count < c && p > p0) {
 					floodingNode::chatter_pub.publish(msg);
-					cout << "sending message  " << to_string(msg->id)<< endl;
+					cout << "sending message ID " << to_string(msg->id)<< endl;
 				} else {
 					if (floodingNode::count < c) {
 						floodingNode::chatter_pub.publish(msg);
-						cout << "sending message  " << to_string(msg->id)<< endl;
+						cout << "sending message ID " << to_string(msg->id)<< endl;
 					}
 				}
 
@@ -165,11 +164,14 @@ int main(int argc, char **argv) {
 	/*
 	 This is a message object. You stuff it with data, and then publish it.
 	 */
+	if (floodingNode::nodeID == 3){
+
 	flooding_test::TestMessage msg;
-	msg.id = rand();
+	msg.id = (rand()%100)+10;
 	msg.sender = floodingNode::nodeID;
 	floodingNode::chatter_pub.publish(msg);
-	cout << "sending message  " << to_string(msg.id)<< endl;
+	cout << "sending message ID: " << to_string(msg.id)<< endl;
+}
 	/**
 	 * The publish() function is how you send messages. The parameter
 	 * is the message object. The type of this object must agree with the type
@@ -180,10 +182,7 @@ int main(int argc, char **argv) {
 	//floodingNode::chatter_pub.publish(msg);
 	while (ros::ok()) {
 		ros::spinOnce();
-
-		//chatter_pub.publish(msg);
 		loop_rate.sleep();
-		//++count;
 	}
 
 	return 0;

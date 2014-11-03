@@ -42,25 +42,25 @@ void listenForPacket();
 
 
 
-void onRosTestMessage8821747628280690523(const ros::MessageEvent<flooding_test::TestMessage>& event) {
+void onRosTestMessage16596579091559891152(const ros::MessageEvent<flooding_test::TestMessage>& event) {
 	if(0 == event.getPublisherName().compare(ownRosName)) return;
 uint8_t* buffer = NULL;
 	const flooding_test::TestMessage::ConstPtr& message = event.getMessage();
 	try{
 		uint32_t serial_size = ros::serialization::serializationLength(*message);
-		buffer = new uint8_t[serial_size+4];
-		ros::serialization::OStream stream(buffer+4, serial_size);
-		*((size_t*)buffer) = 8821747628280690523u;
+		buffer = new uint8_t[serial_size+sizeof(size_t)];
+		ros::serialization::OStream stream(buffer+sizeof(size_t), serial_size);
+		*((size_t*)buffer) = 16596579091559891152;
 		ros::serialization::serialize(stream, *message);
 		// write message to UDP
-		insocket->send_to(boost::asio::buffer((void*)buffer,serial_size+4),destEndPoint);
+		insocket->send_to(boost::asio::buffer((void*)buffer,serial_size+sizeof(size_t)),destEndPoint);
 	} catch(std::exception& e) {
 		ROS_ERROR_STREAM_THROTTLE(2,"Exception while sending UDP message:"<<e.what()<< " Discarding message!");
 	}
 	if(buffer!=NULL) delete[] buffer;
 }
 
-ros::Publisher pub8821747628280690523;
+ros::Publisher pub16596579091559891152;
 
 boost::array<char,64000> inBuffer;
 void listenForPacket() {
@@ -70,15 +70,15 @@ void listenForPacket() {
 void handleUdpPacket(const boost::system::error_code& error,   std::size_t bytes_transferred) {
 	//std::cout << "From "<<otherEndPoint.address() << std::endl;
 	if (!error) { // && otherEndPoint.address() != localIP) {
-		size_t id = *((uint32_t*)(inBuffer.data()));
+		size_t id = *((size_t*)(inBuffer.data()));
 		//std::cout << "Got packet"<<std::endl;
 		try {	
-			ros::serialization::IStream stream(((uint8_t*)inBuffer.data())+4,bytes_transferred-4);
+			ros::serialization::IStream stream(((uint8_t*)inBuffer.data())+sizeof(size_t),bytes_transferred-sizeof(size_t));
 			switch(id) {
-case 8821747628280690523ul: {
-flooding_test::TestMessage m8821747628280690523;
-ros::serialization::Serializer<flooding_test::TestMessage>::read(stream, m8821747628280690523);
-pub8821747628280690523.publish<flooding_test::TestMessage>(m8821747628280690523);
+case 16596579091559891152: {
+flooding_test::TestMessage m16596579091559891152;
+ros::serialization::Serializer<flooding_test::TestMessage>::read(stream, m16596579091559891152);
+pub16596579091559891152.publish<flooding_test::TestMessage>(m16596579091559891152);
 break; }
 			
 				default:
@@ -144,9 +144,9 @@ int main (int argc, char *argv[])
     
     std::cout << ownRosName << std::endl;
     
-ros::Subscriber sub0 = n.subscribe("flooding_test/TestMessage",5, onRosTestMessage8821747628280690523,ros::TransportHints().unreliable().tcpNoDelay().reliable());
+ros::Subscriber sub0 = n.subscribe("/flooding_test/TestMessage",5, onRosTestMessage16596579091559891152,ros::TransportHints().unreliable().tcpNoDelay().reliable());
 	
-pub8821747628280690523 = n.advertise<flooding_test::TestMessage>("flooding_test/TestMessage",5,false);
+pub16596579091559891152 = n.advertise<flooding_test::TestMessage>("/flooding_test/TestMessage",5,false);
 	
 	boost::thread iothread(run);
     
