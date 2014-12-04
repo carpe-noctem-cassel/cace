@@ -223,6 +223,22 @@ namespace cace
 #endif
 	}
 
+	void Cace::halt()
+	{
+#ifdef USE_ROS
+		//Todo: stop timer
+		//timer.stop();
+		communication->cleanUp();
+#else
+		if (isActive && timer != nullptr)
+		{
+			isActive = false;
+			timer->join();
+			delete timer;
+		}
+#endif
+	}
+
 	vector<int>* Cace::getActiveRobots()
 	{
 		return &activeRobots;
@@ -330,13 +346,13 @@ namespace cace
 	void Cace::agentDisengangement(int id)
 	{
 		/*for (int i = 0; i < activeRobots.size(); i++)
-		{
-			if (activeRobots.at(i) == id)
-			{
-				activeRobots.erase(activeRobots.begin() + i);
-				i--;
-			}
-		}*/
+		 {
+		 if (activeRobots.at(i) == id)
+		 {
+		 activeRobots.erase(activeRobots.begin() + i);
+		 i--;
+		 }
+		 }*/
 	}
 
 	Cace* Cace::getEmulated(string prefix, int id, bool quiet)

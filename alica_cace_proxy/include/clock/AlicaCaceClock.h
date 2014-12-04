@@ -5,8 +5,8 @@
  *      Author: Paul Panin
  */
 
-#ifndef ALICAROSCLOCK_H_
-#define ALICAROSCLOCK_H_
+#ifndef ALICACACECLOCK_H_
+#define ALICACACECLOCK_H_
 
 #include <engine/IAlicaClock.h>
 #include <cace.h>

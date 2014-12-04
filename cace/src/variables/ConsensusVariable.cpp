@@ -63,6 +63,9 @@ namespace cace
 		lock_guard<std::mutex> lock(valueMutex);
 		this->val = vector<uint8_t>(v.val);
 		hasValue = val.size() > 0;
+		for(auto &del : v.changeNotify) {
+			this->changeNotify.push_back(del);
+		}
 		//notifies all subscribers about change
 		//notify();
 	}

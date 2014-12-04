@@ -50,7 +50,7 @@ uint8_t* buffer = NULL;
 		uint32_t serial_size = ros::serialization::serializationLength(*message);
 		buffer = new uint8_t[serial_size+sizeof(size_t)];
 		ros::serialization::OStream stream(buffer+sizeof(size_t), serial_size);
-		*((size_t*)buffer) = 16596579091559891152;
+		*((size_t*)buffer) = 16596579091559891152ul;
 		ros::serialization::serialize(stream, *message);
 		// write message to UDP
 		insocket->send_to(boost::asio::buffer((void*)buffer,serial_size+sizeof(size_t)),destEndPoint);
@@ -75,7 +75,7 @@ void handleUdpPacket(const boost::system::error_code& error,   std::size_t bytes
 		try {	
 			ros::serialization::IStream stream(((uint8_t*)inBuffer.data())+sizeof(size_t),bytes_transferred-sizeof(size_t));
 			switch(id) {
-case 16596579091559891152: {
+case 16596579091559891152ul: {
 flooding_test::TestMessage m16596579091559891152;
 ros::serialization::Serializer<flooding_test::TestMessage>::read(stream, m16596579091559891152);
 pub16596579091559891152.publish<flooding_test::TestMessage>(m16596579091559891152);

@@ -314,12 +314,12 @@ namespace detail
 			// retrieve the number of elements
 			size_t size = deserialize_helper<size_t>::apply(begin, end);
 
-			std::list<T> vect(size);
+			std::list<T> l;
 			for (size_t i = 0; i < size; ++i)
 			{
-				vect[i] = std::move(deserialize_helper<T>::apply(begin, end));
+				l.push_back(std::move(deserialize_helper<T>::apply(begin, end)));
 			}
-			return vect;
+			return l;
 		}
 	};
 

@@ -5,20 +5,16 @@
  *      Author: endy
  */
 
-#ifndef ALICAROSCOMMUNICATION_H_
-#define ALICAROSCOMMUNICATION_H_
+#ifndef ALICACACECOMMUNICATION_H_
+#define ALICACACECOMMUNICATION_H_
 
 #include "engine/IAlicaCommunication.h"
 #include "ros/ros.h"
-
-#include "alica_ros_proxy/AllocationAuthorityInfo.h"
-#include "alica_ros_proxy/BehaviourEngineInfo.h"
-#include "alica_ros_proxy/PlanTreeInfo.h"
-#include "alica_ros_proxy/RoleSwitch.h"
-#include "alica_ros_proxy/SyncReady.h"
-#include "alica_ros_proxy/SyncTalk.h"
+#include <cace.h>
+#include <variables/ConsensusVariable.h>
 
 using namespace alica;
+using namespace cace;
 
 namespace alicaCaceProxy
 {
@@ -26,7 +22,7 @@ namespace alicaCaceProxy
 	class AlicaCaceCommunication : public alica::IAlicaCommunication
 	{
 	public:
-		AlicaCaceCommunication(AlicaEngine* ae);
+		AlicaCaceCommunication(AlicaEngine* ae, Cace* cace);
 		virtual ~AlicaCaceCommunication();
 
 		virtual void tick();
@@ -37,33 +33,19 @@ namespace alicaCaceProxy
 		virtual void sendRoleSwitch(RoleSwitch& rs);
 		virtual void sendSyncReady(SyncReady& sr);
 		virtual void sendSyncTalk(SyncTalk& st);
+		virtual void sendSolverResult(SolverResult& sr);
 
-		virtual void handleAllocationAuthorityRos(alica_ros_proxy::AllocationAuthorityInfoPtr aai);
-		virtual void handlePlanTreeInfoRos(alica_ros_proxy::PlanTreeInfoPtr pti);
-		virtual void handleSyncReadyRos(alica_ros_proxy::SyncReadyPtr sr);
-		virtual void handleSyncTalkRos(alica_ros_proxy::SyncTalkPtr st);
+		virtual void handleAllocationAuthorityCace(ConsensusVariable* aai);
+		virtual void handlePlanTreeInfoCace(ConsensusVariable* pti);
+		virtual void handleSyncReadyCace(ConsensusVariable* sr);
+		virtual void handleSyncTalkCace(ConsensusVariable* st);
 
 		virtual void startCommunication();
 		virtual void stopCommunication();
 
 	protected:
 		int ownID;
-		ros::NodeHandle* rosNode;
-		ros::AsyncSpinner* spinner;
-
-		ros::Publisher BehaviourEngineInfoPublisher;
-		ros::Publisher RoleSwitchPublisher;
-
-		ros::Publisher AllocationAuthorityInfoPublisher;
-		ros::Subscriber AllocationAuthorityInfoSubscriber;
-
-		ros::Publisher PlanTreeInfoPublisher;
-		ros::Subscriber PlanTreeInfoSubscriber;
-
-		ros::Publisher SyncReadyPublisher;
-		ros::Subscriber SyncReadySubscriber;
-		ros::Publisher SyncTalkPublisher;
-		ros::Subscriber SyncTalkSubscriber;
+		Cace* cace;
 
 		bool isRunning;
 	};

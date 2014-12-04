@@ -143,6 +143,11 @@ namespace cace
 		 */
 		void run();
 
+		/*!
+		 * Halts asynchronous run
+		 */
+		void halt();
+
 		vector<int>* getActiveRobots();
 
 		/*!
