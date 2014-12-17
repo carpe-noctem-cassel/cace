@@ -78,7 +78,7 @@ namespace alicaCaceProxy
 	{
 		if (this->isRunning)
 		{
-			ros::spinOnce();
+			cace->step();
 		}
 	}
 
@@ -229,12 +229,12 @@ namespace alicaCaceProxy
 	void AlicaCaceCommunication::startCommunication()
 	{
 		this->isRunning = true;
-		cace->run();
+		//cace->run();
 	}
 	void AlicaCaceCommunication::stopCommunication()
 	{
 		this->isRunning = false;
-		cace->halt();
+		//cace->halt();
 	}
 
 } /* namespace alicaRosProxy */

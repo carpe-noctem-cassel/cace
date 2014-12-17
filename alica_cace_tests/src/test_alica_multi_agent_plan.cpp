@@ -91,6 +91,7 @@ TEST_F(AlicaMultiAgent, runMultiAgentPlan)
 {
 	sc->setHostname("nase");
 	cace = Cace::getEmulated(sc->getHostname(), sc->getOwnRobotID());
+	cace->safeStepMode = true;
 	ae = new alica::AlicaEngine();
 	ae->setIAlicaClock(new alicaCaceProxy::AlicaCaceClock(cace));
 	ae->setCommunicator(new alicaCaceProxy::AlicaCaceCommunication(ae, cace));
@@ -99,6 +100,7 @@ TEST_F(AlicaMultiAgent, runMultiAgentPlan)
 
 	sc->setHostname("hairy");
 	cace2 = Cace::getEmulated(sc->getHostname(), sc->getOwnRobotID());
+	cace2->safeStepMode = true;
 	ae2 = new alica::AlicaEngine();
 	ae2->setIAlicaClock(new alicaCaceProxy::AlicaCaceClock(cace2));
 	ae2->setCommunicator(new alicaCaceProxy::AlicaCaceCommunication(ae2, cace2));

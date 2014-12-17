@@ -111,7 +111,7 @@ include_directories(
 
 ## Declare a cpp library
 add_library(alica_cace_proxy
-	src/clock/AlicaCaceClock.cpp src/communication/AlicaCaceCommunication.cpp
+	src/clock/AlicaCaceClock.cpp src/communication/AlicaCaceCommunication.cpp src/constraintmodul/CaceVariableSync.cpp
 )
 
 ## Declare a cpp executable

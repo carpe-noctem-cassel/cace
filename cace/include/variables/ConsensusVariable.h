@@ -146,7 +146,7 @@ namespace cace
 		void setLamportAge(unsigned long la);
 
 		/*!
-		 * Consensus Level (low for weak, high for strong consensus)
+		 * Accept strategy + Consistencylevel (=which proposals to overtake as own proposal)
 		 */
 		acceptStrategy getAcceptStrategy();
 		void setAcceptStrategy(acceptStrategy aS);
