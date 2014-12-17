@@ -259,7 +259,7 @@ namespace cace
 		strategy = aS;
 	}
 
-	bool ConsensusVariable::defaultAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
+	bool ConsensusVariable::defaultAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue)
 	{
 		//if we receive a unknown variable commandedValue != null
 		if (commandedValue != nullptr)
@@ -267,71 +267,28 @@ namespace cace
 			this->setValue(*commandedValue);
 		}
 
-		//if(!checkConflict(c)) return false;
-		ConsensusVariable* newest = this;
-		for (auto cv : proposals)
-		{
-			//if lamport time is newer or
-			if ((cv->lamportAge > newest->lamportAge)
-					|| (cv->lamportAge == newest->lamportAge && cv->robotID < newest->robotID))
-			{
-				newest = &(*cv);
-			}
-		}
-		if (newest != this)
-		{
-			update(*newest);
-			return true;
-		}
-		return false;
+		return ((gt->lamportAge > lt->lamportAge)
+					|| (gt->lamportAge == lt->lamportAge && gt->robotID > lt->robotID));
 	}
-	bool ConsensusVariable::lowestIDAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
+	bool ConsensusVariable::lowestIDAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (commandedValue != nullptr)
 		{
 			this->setValue(*commandedValue);
 		}
 
-		//if(!checkConflict(c)) return false;
-		ConsensusVariable* prio = this;
-		for (auto cv : proposals)
-		{
-			if (cv->hasValue && cv->robotID < prio->robotID)
-			{
-				prio = &(*cv);
-			}
-		}
-		if (prio != this)
-		{
-			update(*prio);
-			return true;
-		}
-		return false;
+		return !(lt->hasValue && lt->robotID < gt->robotID);
 	}
-	bool ConsensusVariable::mostRecentAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
+	bool ConsensusVariable::mostRecentAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (commandedValue != nullptr)
 		{
 			this->setValue(*commandedValue);
 		}
-
-		//if(!checkConflict(c)) return false;
-		ConsensusVariable* newest = this;
-		for (auto cv : proposals)
-		{
-			if (cv->hasValue && cv->decissionTime > newest->decissionTime)
-			{
-				newest = &(*cv);
-			}
-		}
-		if (newest != this)
-		{
-			update(*newest);
-			return true;
-		}
-		return false;
+		return !(lt->hasValue && gt->decissionTime < lt->decissionTime);
 	}
-	bool ConsensusVariable::electionAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
+
+	bool ConsensusVariable::electionAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (!hasValue)
 			setValue(std::numeric_limits<double>::min());
@@ -340,12 +297,28 @@ namespace cace
 
 	bool ConsensusVariable::acceptProposals(Cace& cace, vector<uint8_t>* value)
 	{
-		bool ret = (this->*acceptFunction)(cace, value);
+		ConsensusVariable *winner = this;
+		bool ret;
+		for (auto cv : proposals)
+		{
+			if((this->*acceptFunction)(winner, &(*cv), cace, value)) {
+
+			} else {
+				winner = &(*cv);
+			}
+		}
+		if (winner != this)
+		{
+			update(*winner);
+			ret = true;
+		}
+		ret = false;
+
 		this->notify();
 		return ret;
 	}
 
-	bool ConsensusVariable::listAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue)
+	bool ConsensusVariable::listAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue)
 	{
 		if (commandedValue != nullptr)
 		{

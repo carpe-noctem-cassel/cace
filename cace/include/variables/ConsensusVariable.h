@@ -27,7 +27,7 @@ namespace cace
 	class ConsensusVariable;
 	class Cace;
 
-	typedef bool (ConsensusVariable::*t_acceptFunction)(Cace&, vector<uint8_t>*);
+	typedef bool (ConsensusVariable::*t_acceptFunction)(ConsensusVariable *gt, ConsensusVariable *lt, Cace&, vector<uint8_t>*);
 
 	class ConsensusVariable
 	{
@@ -216,11 +216,11 @@ namespace cace
 			return type == CaceType::Custom;
 		}
 
-		bool defaultAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
-		bool lowestIDAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
-		bool mostRecentAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
-		bool electionAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
-		bool listAcceptStrategy(Cace &c, vector<uint8_t>* commandedValue);
+		bool defaultAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue);
+		bool lowestIDAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue);
+		bool mostRecentAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue);
+		bool electionAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue);
+		bool listAcceptStrategy(ConsensusVariable *gt, ConsensusVariable *lt, Cace &c, vector<uint8_t>* commandedValue);
 
 		/*!
 		 * Register of functions that are called when an variable change occured
