@@ -51,25 +51,25 @@ namespace alicaCaceProxy
 	{
 	}
 
-	void CaceVariableSync::postResult(long vid, double result)
+	void CaceVariableSync::postResult(long vid, shared_ptr<vector<uint8_t>>& result)
 	{
-		uint8_t type = CaceType::CDouble;
+		uint8_t type = CaceType::Custom;
 		acceptStrategy strategy = acceptStrategy::FireAndForgetElection;
 
 		auto v1 = make_shared<ConsensusVariable>(std::to_string(vid), strategy, std::numeric_limits<long>::max(),
 													cace->communication->getOwnID(),
 													cace->timeManager->getDistributedTime(),
 													cace->timeManager->lamportTime, type);
-		v1->setValue(result);
+		v1->setValue(*result);
 
 		cace->caceSpace->distributeVariable(v1);
 	}
 
-	shared_ptr<vector<shared_ptr<vector<double> > > > CaceVariableSync::getSeeds(
+	shared_ptr<vector<shared_ptr<vector<shared_ptr<vector<uint8_t>>>>>> CaceVariableSync::getSeeds(
 			shared_ptr<vector<Variable*> > query, shared_ptr<vector<shared_ptr<vector<double> > > > limits)
 	{
 		int dim = query->size();
-		auto ret = make_shared<vector<shared_ptr<vector<double>>>>(dim);
+		auto ret = make_shared<vector<shared_ptr<vector<shared_ptr<vector<uint8_t>>>>>>(dim);
 		return ret;
 	}
 

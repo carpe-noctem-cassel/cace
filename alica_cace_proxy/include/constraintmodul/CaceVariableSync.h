@@ -30,8 +30,8 @@ namespace alicaCaceProxy
 		virtual void clear();
 		virtual void onSolverResult(shared_ptr<SolverResult> msg);
 
-		virtual void postResult(long vid, double result);
-		virtual shared_ptr<vector<shared_ptr<vector<double>>>> getSeeds(shared_ptr<vector<Variable*>> query, shared_ptr<vector<shared_ptr<vector<double>>>> limits);
+		virtual void postResult(long vid, shared_ptr<vector<uint8_t>>& result);
+		virtual shared_ptr<vector<shared_ptr<vector<shared_ptr<vector<uint8_t>>>>>> getSeeds(shared_ptr<vector<Variable*>> query, shared_ptr<vector<shared_ptr<vector<double>>>> limits);
 
 	protected:
 		cace::Cace* cace;
