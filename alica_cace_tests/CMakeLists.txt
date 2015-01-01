@@ -31,7 +31,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp system_config cace fsystem autodi
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS 
   LIBRARIES alica_engine 
   CATKIN_DEPENDS alica_engine alica_cace_proxy
 #  DEPENDS tinyxml
