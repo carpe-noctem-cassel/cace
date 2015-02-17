@@ -33,6 +33,7 @@
 #include <signal.h>
 #include <event2/event.h>
 #include <sys/time.h>
+#include <netinet/tcp.h>
 
 
 #define MAX_VALUE_SIZE 65536
@@ -41,7 +42,7 @@ struct timeval t1, t2;
 
 
 int size = 4000;
-const int tries = 100;
+const int tries = 200;
 double n = 0;
 double mean = 0;
 double m2 = 0;
@@ -104,11 +105,21 @@ client_submit_value(struct client* c)
 		value[size]=0;
 	}
 
+	value[0] = (char)n;
+	n++;
+
 	c->value_size = size;
 	//sleep(1);
+	static int it = 0;
+	it++;
 	usleep(10000);
 	gettimeofday(&t1, NULL);
+	double elapsedTime;
+			elapsedTime = (t1.tv_sec) * 1000000.0;      // sec to us
+			elapsedTime += (t1.tv_usec);   // us to us
 	paxos_submit(c->bev, value, c->value_size);
+	printf("Submit: %d\t%f\t\n",(int)value[0], elapsedTime);
+	fflush(stdout);
 }
 
 static void
@@ -118,9 +129,14 @@ on_deliver(unsigned iid, char* value, size_t size, void* arg)
 	double elapsedTime;
 	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000000.0;      // sec to us
     elapsedTime += (t2.tv_usec - t1.tv_usec);   // us to us
-	addData(elapsedTime);
+    printf("Delivery TimeDiff: %f\n", elapsedTime);
+    elapsedTime = (t2.tv_sec) * 1000000.0;      // sec to us
+    elapsedTime += (t2.tv_usec);   // us to us
 
-	printf("%f\n", mean);
+	printf("Deliver: %d\t%f\n",(int)value[0], elapsedTime);
+    fflush(stdout);
+//	addData(elapsedTime);
+
 
 	struct client* c = arg;
 	client_submit_value(c);
@@ -147,6 +163,9 @@ connect_to_proposer(struct client* c, const char* config, int proposer_id)
 	struct evpaxos_config* conf = evpaxos_config_read(config);
 	struct sockaddr_in addr = evpaxos_proposer_address(conf, proposer_id);
 	bev = bufferevent_socket_new(c->base, -1, BEV_OPT_CLOSE_ON_FREE);
+		int fd =  bufferevent_getfd(bev);
+	int flag = 1;
+    int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
 	bufferevent_setcb(bev, NULL, NULL, on_connect, c);
 	bufferevent_enable(bev, EV_READ|EV_WRITE);
 	bufferevent_socket_connect(bev, (struct sockaddr*)&addr, sizeof(addr));
@@ -158,13 +177,24 @@ make_client(const char* config, int proposer_id, int outstanding, int value_size
 {
 	struct client* c;
 	c = malloc(sizeof(struct client));
-	c->base = event_base_new();
+
+	struct event_config* evconfig = event_config_new();
+	struct timeval msec_100 = { 0, 100*1000 };
+	//event_config_set_max_dispatch_interval(evconfig, &msec_100, 5, 1);
+//	event_config_avoid_method(evconfig,"epoll");
+//	event_config_avoid_method(evconfig,"poll");
+//	event_config_avoid_method(evconfig,"select");
+	//event_config_require_features(evconfig, EV_FEATURE_ET);
+	//event_config_set_flag(evconfig, EVENT_BASE_FLAG_IGNORE_ENV);
+	c->base = event_base_new_with_config(evconfig);
+	//event_base_priority_init(c->base, 1);
 	
 	memset(&c->stats, 0, sizeof(struct stats));
 	c->bev = connect_to_proposer(c, config, proposer_id);
 	if (c->bev == NULL)
 		exit(1);
-	
+	const char* blub = event_base_get_method(c->base);
+	printf("%s", blub);
 	c->value_size = value_size;
 	c->outstanding = outstanding;
 	

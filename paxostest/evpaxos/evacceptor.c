@@ -74,6 +74,13 @@ evacceptor_handle_prepare(struct peer* p, paxos_message* msg, void* arg)
 static void 
 evacceptor_handle_accept(struct peer* p, paxos_message* msg, void* arg)
 {	
+	struct timeval t2;
+	gettimeofday(&t2, NULL);
+	double elapsedTime;
+	elapsedTime = (t2.tv_sec) * 1000000.0;      // sec to us
+    elapsedTime += (t2.tv_usec);   // us to us
+    printf("Before: %d %f\n",(int)msg->u.accept.value.paxos_value_val[0], elapsedTime);
+
 	paxos_message out;
 	paxos_accept* accept = &msg->u.accept;
 	struct evacceptor* a = (struct evacceptor*)arg;
@@ -81,6 +88,15 @@ evacceptor_handle_accept(struct peer* p, paxos_message* msg, void* arg)
 		accept->iid, accept->ballot);
 	if (acceptor_receive_accept(a->state, accept, &out) != 0) {
 		if (out.type == PAXOS_ACCEPTED) {
+
+//				struct timeval t2;
+//	gettimeofday(&t2, NULL);
+//	double elapsedTime;
+//	elapsedTime = (t2.tv_sec) * 1000000.0;      // sec to us
+//    elapsedTime += (t2.tv_usec);   // us to us
+//    printf("After: %d %f\n",(int)out.u.accepted.value.paxos_value_val[0], elapsedTime);
+
+
 			peers_foreach_client(a->peers, peer_send_paxos_message, &out);
 		} else if (out.type == PAXOS_PREEMPTED) {
 			send_paxos_message(peer_get_buffer(p), &out);

@@ -31,12 +31,45 @@
 #include "paxos_types_pack.h"
 #include <string.h>
 
-
+struct timeval tTest;
 static int
 bufferevent_pack_data(void* data, const char* buf, size_t len)
 {
 	struct bufferevent* bev = (struct bufferevent*)data;
-	bufferevent_write(bev, buf, len);
+	int fd = bufferevent_getfd(bev);
+
+	struct timeval tBegin;
+	gettimeofday(&tBegin, NULL);
+
+	send(fd, buf, len, 0);
+	//bufferevent_write(bev, buf, len);
+
+	struct timeval t2;
+	gettimeofday(&t2, NULL);
+
+	double elapsedTime = (t2.tv_sec - tBegin.tv_sec) * 1000000.0;      // sec to us
+    elapsedTime += (t2.tv_usec - tBegin.tv_usec);   // us to us
+    if(elapsedTime > 1000.0) {
+    	printf("Transmission took too long: \t\t\t\t%f\n", elapsedTime);
+    	fflush(stdout);
+    }
+
+//	double elapsedTime = (tBegin.tv_sec) * 1000000.0;      // sec to us
+//	elapsedTime += (tBegin.tv_usec);   // us to us
+//	printf("Proposer after end : %d\t%f\n", elapsedTime);
+
+
+	/*struct timeval t2;
+	gettimeofday(&t2, NULL);
+	double elapsedTime;
+	elapsedTime = (t2.tv_sec - tTest.tv_sec) * 1000000.0;      // sec to us
+    elapsedTime += (t2.tv_usec - tTest.tv_usec);   // us to us
+    	double elapsedTime2;
+	elapsedTime2 = (t2.tv_sec) * 1000000.0;      // sec to us
+    elapsedTime2 += (t2.tv_usec);   // us to us
+	printf("\t%f\t%f\n", elapsedTime2, elapsedTime);
+	fflush(stdout);
+*/
 	return 0;
 }
 
@@ -76,6 +109,12 @@ send_paxos_accept(struct bufferevent* bev, paxos_accept* p)
 		.type = PAXOS_ACCEPT,
 		.u.accept = *p };
 	send_paxos_message(bev, &msg);
+
+	struct timeval tBegin;
+		gettimeofday(&tBegin, NULL);
+	double elapsedTime = (tBegin.tv_sec) * 1000000.0;      // sec to us
+	elapsedTime += (tBegin.tv_usec);   // us to us
+	printf("Proposer end: %d\t%f\n",(int)p->value.paxos_value_val[0], elapsedTime);
 	paxos_log_debug("Send accept for iid %d ballot %d", p->iid, p->ballot);
 }
 
@@ -122,11 +161,21 @@ send_paxos_trim(struct bufferevent* bev, paxos_trim* t)
 void
 paxos_submit(struct bufferevent* bev, char* data, int size)
 {
+
+	gettimeofday(&tTest, NULL);
+	double elapsedTime;
+	elapsedTime = (tTest.tv_sec) * 1000000.0;      // sec to us
+    elapsedTime += (tTest.tv_usec);   // us to us
+
 	paxos_message msg = {
 		.type = PAXOS_CLIENT_VALUE,
 		.u.client_value.value.paxos_value_len = size,
 		.u.client_value.value.paxos_value_val = data };
+
+	//printf("+\t%f\n", elapsedTime);
+	//fflush(stdout);
 	send_paxos_message(bev, &msg);
+	//printf("+ ");
 }
 
 int
@@ -138,8 +187,10 @@ recv_paxos_message(struct evbuffer* in, paxos_message* out)
 	msgpack_unpacked msg;
 	
 	size = evbuffer_get_length(in);
-	if (size == 0) 
+	if (size == 0) {
+		//if(rv==0) printf("X------------------------------ should never happen\n");
 		return rv;
+	}
 	
 	msgpack_unpacked_init(&msg);
 	buffer = (char*)evbuffer_pullup(in, size);	
@@ -149,5 +200,7 @@ recv_paxos_message(struct evbuffer* in, paxos_message* out)
 		rv = 1;
 	}
 	msgpack_unpacked_destroy(&msg);
+
+	//if(rv==0)printf("O------------------------------ should never happen\n");
 	return rv;
 }

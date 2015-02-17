@@ -119,12 +119,27 @@ evproposer_handle_preempted(struct peer* p, paxos_message* msg, void* arg)
 static void
 evproposer_handle_client_value(struct peer* p, paxos_message* msg, void* arg)
 {
+	struct timeval tBegin;
+//		static int it = 0;
+//	it++;
+	gettimeofday(&tBegin, NULL);
+	double elapsedTime;
+	elapsedTime = (tBegin.tv_sec) * 1000000.0;      // sec to us
+	elapsedTime += (tBegin.tv_usec);   // us to us
+	printf("Proposer before: %d\t%f\n",(int)msg->u.client_value.value.paxos_value_val[0], elapsedTime);
+	fflush(stdout);
+
 	struct evproposer* proposer = arg;
 	struct paxos_client_value* v = &msg->u.client_value;
 	proposer_propose(proposer->state,
 		v->value.paxos_value_val,
 		v->value.paxos_value_len);
 	try_accept(proposer);
+		gettimeofday(&tBegin, NULL);
+	elapsedTime = (tBegin.tv_sec) * 1000000.0;      // sec to us
+	elapsedTime += (tBegin.tv_usec);   // us to us
+	printf("Proposer middle: %d\t%f\n",(int)msg->u.client_value.value.paxos_value_val[0], elapsedTime);
+	fflush(stdout);
 }
 
 static void

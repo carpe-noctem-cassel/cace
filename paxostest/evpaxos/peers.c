@@ -35,6 +35,9 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/listener.h>
+#include <netinet/tcp.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 struct peer
 {
@@ -258,7 +261,16 @@ on_peer_event(struct bufferevent* bev, short ev, void *arg)
 			inet_ntoa(p->addr.sin_addr), ntohs(p->addr.sin_port));
 		base = bufferevent_get_base(p->bev);
 		bufferevent_free(p->bev);
-		p->bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+		int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		//p->bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+		p->bev = bufferevent_socket_new(base, sockfd, BEV_OPT_CLOSE_ON_FREE);
+		int fd =  bufferevent_getfd(p->bev);
+		int opts = fcntl(fd,F_GETFL);
+		opts = opts & (~O_NONBLOCK);
+		fcntl(fd,F_SETFL,opts);
+
+		int flag = 1;
+		int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
 		bufferevent_setcb(p->bev, on_read, NULL, on_peer_event, p);
 		event_add(p->reconnect_ev, &reconnect_timeout);
 		p->status = ev;
@@ -343,7 +355,18 @@ make_peer(struct peers* peers, int id, struct sockaddr_in* addr)
 	struct peer* p = malloc(sizeof(struct peer));
 	p->id = id;
 	p->addr = *addr;
-	p->bev = bufferevent_socket_new(peers->base, -1, BEV_OPT_CLOSE_ON_FREE);
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	//p->bev = bufferevent_socket_new(peers->base, -1, BEV_OPT_CLOSE_ON_FREE);
+	p->bev = bufferevent_socket_new(peers->base, sockfd, BEV_OPT_CLOSE_ON_FREE);
+	int fd =  bufferevent_getfd(p->bev);
+
+	int opts = fcntl(fd,F_GETFL);
+	opts = opts & (~O_NONBLOCK);
+	fcntl(fd,F_SETFL,opts);
+
+
+	int flag = 1;
+    int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
 	p->peers = peers;
 	p->reconnect_ev = NULL;
 	p->status = BEV_EVENT_EOF;

@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/time.h>
 
 struct timeval tBegin;
@@ -115,7 +116,6 @@ proposer_free(struct proposer* p)
 void
 proposer_propose(struct proposer* p, const char* value, size_t size)
 {
-	gettimeofday(&tBegin, NULL);
 	paxos_value* v;
 	v = paxos_value_new(value, size);
 	carray_push_back(p->values, v);
@@ -210,8 +210,9 @@ proposer_accept(struct proposer* p, paxos_accept* out)
 			inst = kh_value(h, k);
 	}
 	
-	if (inst == NULL || !quorum_reached(&inst->quorum))
+	if (inst == NULL || !quorum_reached(&inst->quorum)) {
 		return 0;
+	}
 		
 	paxos_log_debug("Trying to accept iid %u", inst->iid);
 	
@@ -258,14 +259,15 @@ proposer_receive_accepted(struct proposer* p, paxos_accepted* ack, int from_id)
 				}
 			}
 			kh_del_instance(p->accept_instances, k);
+			instance_free(inst);
 			struct timeval t1;
 			gettimeofday(&t1, NULL);
 			double elapsedTime;
-			elapsedTime = (t1.tv_sec - tBegin.tv_sec) * 1000000.0;      // sec to us
-			elapsedTime += (t1.tv_usec - tBegin.tv_usec);   // us to us
-			printf("%f\n", elapsedTime);
+			elapsedTime = (t1.tv_sec) * 1000000.0;      // sec to us
+			elapsedTime += (t1.tv_usec);   // us to us
+			//printf("\t%f\n", elapsedTime);
+			fflush(stdout);
 
-			instance_free(inst);
 		}
 		
 		return 1;
