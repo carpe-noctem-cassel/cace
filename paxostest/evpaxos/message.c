@@ -188,6 +188,7 @@ recv_paxos_message(struct evbuffer* in, paxos_message* out)
 	
 	size = evbuffer_get_length(in);
 	if (size == 0) {
+		printf("no more messages\n");
 		//if(rv==0) printf("X------------------------------ should never happen\n");
 		return rv;
 	}
@@ -201,6 +202,7 @@ recv_paxos_message(struct evbuffer* in, paxos_message* out)
 	}
 	msgpack_unpacked_destroy(&msg);
 
+	printf("%d\n", rv);
 	//if(rv==0)printf("O------------------------------ should never happen\n");
 	return rv;
 }
