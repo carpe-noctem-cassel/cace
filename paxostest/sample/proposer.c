@@ -51,17 +51,7 @@ main (int argc, char const *argv[])
 		exit(1);
 	}
 
-	struct event_config* evconfig = event_config_new();
-	struct timeval msec_100 = { 0, 100*1000 };
-	//event_config_set_max_dispatch_interval(evconfig, &msec_100, 5, 1);
-//	event_config_avoid_method(evconfig,"epoll");
-//	event_config_avoid_method(evconfig,"poll");
-//	event_config_avoid_method(evconfig,"select");
-	//event_config_require_features(evconfig, EV_FEATURE_ET);
-	//event_config_set_flag(evconfig, EVENT_BASE_FLAG_IGNORE_ENV);
-	base = event_base_new_with_config(evconfig);
-	//event_base_priority_init(base, 1);
-	//base = event_base_new();
+	base = event_base_new();
 	sig = evsignal_new(base, SIGINT, handle_sigint, base);
 	evsignal_add(sig, NULL);
 	

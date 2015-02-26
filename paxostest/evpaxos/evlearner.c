@@ -87,16 +87,6 @@ static void
 evlearner_handle_accepted(struct peer* p, paxos_message* msg, void* arg)
 {
 	struct evlearner* l = arg;
-
-	struct timeval t2;
-	gettimeofday(&t2, NULL);
-	double elapsedTime;
-	elapsedTime = (t2.tv_sec) * 1000000.0;      // sec to us
-    elapsedTime += (t2.tv_usec);   // us to us
-    printf("%d %f\n",(int)msg->u.accepted.value.paxos_value_val[0], elapsedTime);
-    fflush(stdout);
-
-
 	int peer_id = peer_get_id(p);
 	learner_receive_accepted(l->state, &msg->u.accepted, peer_id);
 	evlearner_deliver_next_closed(l);

@@ -24,6 +24,8 @@
 	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.	
 */
+
+
 #include <paxos.h>
 #include <evpaxos.h>
 #include <errno.h>
@@ -32,33 +34,24 @@
 #include <string.h>
 #include <signal.h>
 #include <event2/event.h>
-#include <sys/time.h>
 #include <netinet/tcp.h>
 
-
-#define MAX_VALUE_SIZE 65536
-char value[MAX_VALUE_SIZE];
-struct timeval t1, t2;
+#define MAX_VALUE_SIZE 8192
 
 
-int size = 4000;
-const int tries = 200;
-double n = 0;
-double mean = 0;
-double m2 = 0;
-
-
-void addData(double x)
+struct client_value
 {
-	n = n + 1.0;
-	double delta = x - mean;
-	mean = mean + delta / n;
-	m2 = m2 + delta * (x - mean);
-}
+  struct timeval t;
+  size_t size;
+  char value[MAX_VALUE_SIZE];
+};
 
 struct stats
 {
 	int delivered;
+	long min_latency;
+	long max_latency;
+	long avg_latency;
 };
 
 struct client
@@ -82,64 +75,73 @@ handle_sigint(int sig, short ev, void* arg)
 	event_base_loopexit(base, NULL);
 }
 
+static void
+random_string(char *s, const int len)
+{
+	int i;
+	static const char alphanum[] =
+		"0123456789abcdefghijklmnopqrstuvwxyz";
+	for (i = 0; i < len-1; ++i)
+		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+	s[len-1] = 0;
+}
 
 static void
 client_submit_value(struct client* c)
 {
-	if (n >= tries)
-	{
-		n=0;
-		m2=0;
-		mean=0;
+	struct client_value v;
+	gettimeofday(&v.t, NULL);
+	v.size = c->value_size;
+	random_string(v.value, v.size);
+	size_t size = sizeof(struct timeval) + sizeof(size_t) + v.size + 4000;
+	paxos_submit(c->bev, (char*)&v, size);
+}
 
-		size += 200;
+// Returns t2 - t1 in microseconds.
+static long
+timeval_diff(struct timeval* t1, struct timeval* t2)
+{
+	long us;
+	us = (t2->tv_sec - t1->tv_sec) * 1e6;
+	if (us < 0) return 0;
+	us += (t2->tv_usec - t1->tv_usec);
+	return us;
+}
 
-		if(size>65536) {
-			exit(0);
-		}
-
-		int i;
-		for(i=0; i<size; i++) {
-			value[i] = 'a';
-		}
-		value[size]=0;
-	}
-
-	value[0] = (char)n;
-	n++;
-
-	c->value_size = size;
-	//sleep(1);
-	static int it = 0;
-	it++;
-	usleep(10000);
-	gettimeofday(&t1, NULL);
-	double elapsedTime;
-			elapsedTime = (t1.tv_sec) * 1000000.0;      // sec to us
-			elapsedTime += (t1.tv_usec);   // us to us
-	paxos_submit(c->bev, value, c->value_size);
-	printf("Submit: %d\t%f\t\n",(int)value[0], elapsedTime);
-	fflush(stdout);
+static void
+update_stats(struct stats* stats, struct client_value* delivered)
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	long lat = timeval_diff(&delivered->t, &tv);
+	stats->delivered++;
+	stats->avg_latency = stats->avg_latency + 
+		((lat - stats->avg_latency) / stats->delivered);
+	if (stats->min_latency == 0 || lat < stats->min_latency)
+		stats->min_latency = lat;
+	if (lat > stats->max_latency)
+		stats->max_latency = lat;
 }
 
 static void
 on_deliver(unsigned iid, char* value, size_t size, void* arg)
 {
-	gettimeofday(&t2, NULL);
-	double elapsedTime;
-	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000000.0;      // sec to us
-    elapsedTime += (t2.tv_usec - t1.tv_usec);   // us to us
-    printf("Delivery TimeDiff: %f\n", elapsedTime);
-    elapsedTime = (t2.tv_sec) * 1000000.0;      // sec to us
-    elapsedTime += (t2.tv_usec);   // us to us
-
-	printf("Deliver: %d\t%f\n",(int)value[0], elapsedTime);
-    fflush(stdout);
-//	addData(elapsedTime);
-
-
 	struct client* c = arg;
+	struct client_value* v = (struct client_value*)value;
+	update_stats(&c->stats, v);
 	client_submit_value(c);
+}
+
+static void
+on_stats(evutil_socket_t fd, short event, void *arg)
+{
+	struct client* c = arg;
+	double mbps = (double)(c->stats.delivered*c->value_size*8) / (1024*1024);
+	printf("%d value/sec, %.2f Mbps, latency min %ld us max %ld us avg %ld us\n", 
+		c->stats.delivered, mbps, c->stats.min_latency, c->stats.max_latency,
+		c->stats.avg_latency);
+	memset(&c->stats, 0, sizeof(struct stats));
+	event_add(c->stats_ev, &c->stats_interval);
 }
 
 static void
@@ -163,12 +165,11 @@ connect_to_proposer(struct client* c, const char* config, int proposer_id)
 	struct evpaxos_config* conf = evpaxos_config_read(config);
 	struct sockaddr_in addr = evpaxos_proposer_address(conf, proposer_id);
 	bev = bufferevent_socket_new(c->base, -1, BEV_OPT_CLOSE_ON_FREE);
-		int fd =  bufferevent_getfd(bev);
-	int flag = 1;
-    int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
 	bufferevent_setcb(bev, NULL, NULL, on_connect, c);
 	bufferevent_enable(bev, EV_READ|EV_WRITE);
 	bufferevent_socket_connect(bev, (struct sockaddr*)&addr, sizeof(addr));
+	int flag = 1;
+	setsockopt(bufferevent_getfd(bev), IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
 	return bev;
 }
 
@@ -177,30 +178,19 @@ make_client(const char* config, int proposer_id, int outstanding, int value_size
 {
 	struct client* c;
 	c = malloc(sizeof(struct client));
-
-	struct event_config* evconfig = event_config_new();
-	struct timeval msec_100 = { 0, 100*1000 };
-	//event_config_set_max_dispatch_interval(evconfig, &msec_100, 5, 1);
-//	event_config_avoid_method(evconfig,"epoll");
-//	event_config_avoid_method(evconfig,"poll");
-//	event_config_avoid_method(evconfig,"select");
-	//event_config_require_features(evconfig, EV_FEATURE_ET);
-	//event_config_set_flag(evconfig, EVENT_BASE_FLAG_IGNORE_ENV);
-	c->base = event_base_new_with_config(evconfig);
-	//event_base_priority_init(c->base, 1);
+	c->base = event_base_new();
 	
 	memset(&c->stats, 0, sizeof(struct stats));
 	c->bev = connect_to_proposer(c, config, proposer_id);
 	if (c->bev == NULL)
 		exit(1);
-	const char* blub = event_base_get_method(c->base);
-	printf("%s", blub);
+	
 	c->value_size = value_size;
 	c->outstanding = outstanding;
 	
-	/*c->stats_interval = (struct timeval){1, 0};
+	c->stats_interval = (struct timeval){1, 0};
 	c->stats_ev = evtimer_new(c->base, on_stats, c);
-	event_add(c->stats_ev, &c->stats_interval);*/
+	event_add(c->stats_ev, &c->stats_interval);
 	
 	paxos_config.learner_catch_up = 0;
 	c->learner = evlearner_init(config, on_deliver, c, c->base);

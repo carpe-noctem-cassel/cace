@@ -36,8 +36,7 @@
 #include <event2/bufferevent.h>
 #include <event2/listener.h>
 #include <netinet/tcp.h>
-#include <unistd.h>
-#include <fcntl.h>
+
 
 struct peer
 {
@@ -81,7 +80,7 @@ static void on_connection_timeout(int fd, short ev, void* arg);
 static void on_listener_error(struct evconnlistener* l, void* arg);
 static void on_accept(struct evconnlistener *l, evutil_socket_t fd,
 	struct sockaddr* addr, int socklen, void *arg);
-
+static void socket_set_nodelay(int fd);
 
 struct peers*
 peers_new(struct event_base* base, struct evpaxos_config* config)
@@ -261,16 +260,7 @@ on_peer_event(struct bufferevent* bev, short ev, void *arg)
 			inet_ntoa(p->addr.sin_addr), ntohs(p->addr.sin_port));
 		base = bufferevent_get_base(p->bev);
 		bufferevent_free(p->bev);
-		int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-		//p->bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
-		p->bev = bufferevent_socket_new(base, sockfd, BEV_OPT_CLOSE_ON_FREE);
-		int fd =  bufferevent_getfd(p->bev);
-		int opts = fcntl(fd,F_GETFL);
-		opts = opts & (~O_NONBLOCK);
-		fcntl(fd,F_SETFL,opts);
-
-		int flag = 1;
-		int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
+		p->bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
 		bufferevent_setcb(p->bev, on_read, NULL, on_peer_event, p);
 		event_add(p->reconnect_ev, &reconnect_timeout);
 		p->status = ev;
@@ -331,6 +321,7 @@ on_accept(struct evconnlistener *l, evutil_socket_t fd,
 	bufferevent_setfd(peer->bev, fd);
 	bufferevent_setcb(peer->bev, on_read, NULL, on_client_event, peer);
 	bufferevent_enable(peer->bev, EV_READ|EV_WRITE);
+	socket_set_nodelay(fd);
 	
 	paxos_log_info("Accepted connection from %s:%d",
 		inet_ntoa(((struct sockaddr_in*)addr)->sin_addr),
@@ -345,6 +336,7 @@ connect_peer(struct peer* p)
 	bufferevent_enable(p->bev, EV_READ|EV_WRITE);
 	bufferevent_socket_connect(p->bev, 
 		(struct sockaddr*)&p->addr, sizeof(p->addr));
+	socket_set_nodelay(bufferevent_getfd(p->bev));
 	paxos_log_info("Connect to %s:%d", 
 		inet_ntoa(p->addr.sin_addr), ntohs(p->addr.sin_port));
 }
@@ -355,18 +347,7 @@ make_peer(struct peers* peers, int id, struct sockaddr_in* addr)
 	struct peer* p = malloc(sizeof(struct peer));
 	p->id = id;
 	p->addr = *addr;
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	//p->bev = bufferevent_socket_new(peers->base, -1, BEV_OPT_CLOSE_ON_FREE);
-	p->bev = bufferevent_socket_new(peers->base, sockfd, BEV_OPT_CLOSE_ON_FREE);
-	int fd =  bufferevent_getfd(p->bev);
-
-	int opts = fcntl(fd,F_GETFL);
-	opts = opts & (~O_NONBLOCK);
-	fcntl(fd,F_SETFL,opts);
-
-
-	int flag = 1;
-    int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
+	p->bev = bufferevent_socket_new(peers->base, -1, BEV_OPT_CLOSE_ON_FREE);
 	p->peers = peers;
 	p->reconnect_ev = NULL;
 	p->status = BEV_EVENT_EOF;
@@ -390,4 +371,11 @@ free_peer(struct peer* p)
 	if (p->reconnect_ev != NULL)
 		event_free(p->reconnect_ev);
 	free(p);
+}
+
+static void
+socket_set_nodelay(int fd)
+{
+	int flag = paxos_config.tcp_nodelay;
+	setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
 }
