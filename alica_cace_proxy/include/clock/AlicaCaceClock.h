@@ -21,7 +21,7 @@ namespace alicaCaceProxy
 	public:
 		AlicaCaceClock(Cace* cace);
 		virtual ~AlicaCaceClock();
-		virtual alica::alicaTime now();
+		virtual alica::AlicaTime now();
 		virtual void sleep(long us);
 	private:
 		Cace* cace;

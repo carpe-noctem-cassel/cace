@@ -21,7 +21,7 @@ namespace alicaCaceProxy
 	{
 	}
 
-	alica::alicaTime AlicaCaceClock::now()
+	alica::AlicaTime AlicaCaceClock::now()
 	{
 		return cace->timeManager->getLocalTime();
 	}
