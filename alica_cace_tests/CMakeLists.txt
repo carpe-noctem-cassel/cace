@@ -53,6 +53,6 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## Add gtest based cpp test target and link libraries
  
-add_dependencies(${PROJECT_NAME}-test ${catkin_LIBRARIES} alica_engine autogen_code)
-target_link_libraries(${PROJECT_NAME}-test ${catkin_LIBRARIES} cace system_config alica_engine autodiff constraintsolver test_behaviour_creator alica_cace_proxy alica_ros_proxy test_expression_creator autogen_code)
+add_dependencies(${PROJECT_NAME}-test ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}-test ${catkin_LIBRARIES})
 endif()

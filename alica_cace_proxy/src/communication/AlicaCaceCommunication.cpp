@@ -8,7 +8,7 @@
 #include "communication/AlicaCaceCommunication.h"
 
 #include "engine/containers/AllocationAuthorityInfo.h"
-#include "engine/containers/BehaviourEngineInfo.h"
+#include "engine/containers/AlicaEngineInfo.h"
 #include "engine/containers/PlanTreeInfo.h"
 #include "engine/containers/RoleSwitch.h"
 #include "engine/containers/SyncReady.h"
@@ -96,9 +96,9 @@ namespace alicaCaceProxy
 		}
 	}
 
-	void AlicaCaceCommunication::sendBehaviourEngineInfo(BehaviourEngineInfo& bi)
+	void AlicaCaceCommunication::sendAlicaEngineInfo(AlicaEngineInfo& bi)
 	{
-		auto v1 = make_shared<ConsensusVariable>("BehaviourEngineInfo", acceptStrategy::FireAndForget,
+		auto v1 = make_shared<ConsensusVariable>("AlicaEngineInfo", acceptStrategy::FireAndForget,
 													std::numeric_limits<long>::max(), cace->communication->getOwnID(),
 													cace->timeManager->getDistributedTime(),
 													cace->timeManager->lamportTime, CaceType::Custom);

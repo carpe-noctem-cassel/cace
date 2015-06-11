@@ -28,7 +28,7 @@ namespace alicaCaceProxy
 		virtual void tick();
 
 		virtual void sendAllocationAuthority(AllocationAuthorityInfo& aai);
-		virtual void sendBehaviourEngineInfo(BehaviourEngineInfo& bi);
+		virtual void sendAlicaEngineInfo(AlicaEngineInfo& bi);
 		virtual void sendPlanTreeInfo(PlanTreeInfo& pti);
 		virtual void sendRoleSwitch(RoleSwitch& rs);
 		virtual void sendSyncReady(SyncReady& sr);

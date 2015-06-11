@@ -47,19 +47,19 @@ find_package(Boost REQUIRED COMPONENTS system)
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
- add_message_files(
-   DIRECTORY msg FILES
-   AllocationAuthorityInfo.msg
-   EntryPointRobots.msg
-   RoleSwitch.msg
-   SolverVar.msg
-   SyncReady.msg
-   BehaviourEngineInfo.msg 
-   PlanTreeInfo.msg
-   SolverResult.msg
-   SyncData.msg
-   SyncTalk.msg   
-)
+# add_message_files(
+#   DIRECTORY msg FILES
+#   AllocationAuthorityInfo.msg
+#   EntryPointRobots.msg
+#   RoleSwitch.msg
+#   SolverVar.msg
+#   SyncReady.msg
+#   AlicaEngineInfo.msg 
+#   PlanTreeInfo.msg
+#   SolverResult.msg
+#   SyncData.msg
+#   SyncTalk.msg   
+#)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
