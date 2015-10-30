@@ -11,8 +11,10 @@
 #include <string>
 #include <thread>
 #include "communication/multicast/PracticalSocket.h"
+#include <random>
 
 using namespace std;
+
 
 //#define MAX_PACKETSIZE 8192
 #define MAX_PACKETSIZE 100000
@@ -28,12 +30,15 @@ namespace cacemulticast
 	{
 	public:
 		static long traffic;
+		static double packetLossPropability;
+		static std::default_random_engine re;
 		CaceMultiCastChannel(string address, unsigned short port, t_multicastcallback<CommunicationClass> callback,
 								CommunicationClass* obj);
 		~CaceMultiCastChannel();
 		void publish(const char* bytes, int size);
 
 	protected:
+		double randomNumber();
 		static unsigned short sourcePort;
 		bool running;
 		std::thread* t;
@@ -50,6 +55,10 @@ namespace cacemulticast
 	unsigned short CaceMultiCastChannel<CommunicationClass>::sourcePort = 30000;
 	template<class CommunicationClass>
 	long CaceMultiCastChannel<CommunicationClass>::traffic = 0;
+	template<class CommunicationClass>
+	double CaceMultiCastChannel<CommunicationClass>::packetLossPropability = 0;
+	template<class CommunicationClass>
+	std::default_random_engine CaceMultiCastChannel<CommunicationClass>::re;
 
 	template<class CommunicationClass>
 	inline CaceMultiCastChannel<CommunicationClass>::CaceMultiCastChannel(
@@ -87,7 +96,9 @@ namespace cacemulticast
 	template<class CommunicationClass>
 	inline void CaceMultiCastChannel<CommunicationClass>::publish(const char* bytes, int size)
 	{
-		udpsocket.sendTo(bytes, size, address, port);
+		if(randomNumber()>=packetLossPropability) {
+			udpsocket.sendTo(bytes, size, address, port);
+		}
 		traffic+=size;
 	}
 
@@ -104,6 +115,16 @@ namespace cacemulticast
 			(obj->*callback)(recvArray, numBytes);
 		}
 	}
+
+	template<class CommunicationClass>
+	double CaceMultiCastChannel<CommunicationClass>::randomNumber()
+	{
+	   double lower_bound = 0;
+	   double upper_bound = 1;
+	   std::uniform_real_distribution<double> unif(lower_bound,upper_bound);
+	   return unif(re);
+	}
+
 
 } /* namespace cace */
 

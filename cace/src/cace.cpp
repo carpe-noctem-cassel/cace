@@ -159,7 +159,7 @@ namespace cace
 		communication->step();
 
 		//Module Steps
-		timeManager->step();
+		//timeManager->step();
 
 		//process arrived messages
 
@@ -207,8 +207,8 @@ namespace cace
 		variableStore->invalidate(*timeManager);
 
 		//sendEvalString
-		string evalString = timeManager->toString() + variableStore->toStringNoNewLine() + worker->toStringNoNewLine(); /*OwnNetworkStatusString()*/
-		communication->sendEvalString(evalString);
+		//string evalString = timeManager->toString() + variableStore->toStringNoNewLine() + worker->toStringNoNewLine(); /*OwnNetworkStatusString()*/
+		//communication->sendEvalString(evalString);
 
 	}
 

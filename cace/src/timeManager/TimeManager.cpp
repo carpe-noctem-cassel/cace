@@ -89,6 +89,7 @@ namespace cace
 			//if we never received a timemessage: The Agent is propably new and just joining communication range
 			// -> max resendtime
 			return maxResendTime;
+			//return minResendTime;
 		}
 		return max(
 				min(agentModels[agentID].getEstimatedResendTime(resendArrivalPropability) / timeResolutionDevisor,
