@@ -42,25 +42,25 @@ void listenForPacket();
 
 
 
-void onRosTestMessage16596579091559891152(const ros::MessageEvent<flooding_test::TestMessage>& event) {
+void onRosTestMessage2326394828(const ros::MessageEvent<flooding_test::TestMessage>& event) {
 	if(0 == event.getPublisherName().compare(ownRosName)) return;
 uint8_t* buffer = NULL;
 	const flooding_test::TestMessage::ConstPtr& message = event.getMessage();
 	try{
 		uint32_t serial_size = ros::serialization::serializationLength(*message);
-		buffer = new uint8_t[serial_size+sizeof(size_t)];
-		ros::serialization::OStream stream(buffer+sizeof(size_t), serial_size);
-		*((size_t*)buffer) = 16596579091559891152ul;
+		buffer = new uint8_t[serial_size+sizeof(uint32_t)];
+		ros::serialization::OStream stream(buffer+sizeof(uint32_t), serial_size);
+		*((uint32_t*)buffer) = 2326394828u;
 		ros::serialization::serialize(stream, *message);
 		// write message to UDP
-		insocket->send_to(boost::asio::buffer((void*)buffer,serial_size+sizeof(size_t)),destEndPoint);
+		insocket->send_to(boost::asio::buffer((void*)buffer,serial_size+sizeof(uint32_t)),destEndPoint);
 	} catch(std::exception& e) {
 		ROS_ERROR_STREAM_THROTTLE(2,"Exception while sending UDP message:"<<e.what()<< " Discarding message!");
 	}
 	if(buffer!=NULL) delete[] buffer;
 }
 
-ros::Publisher pub16596579091559891152;
+ros::Publisher pub2326394828;
 
 boost::array<char,64000> inBuffer;
 void listenForPacket() {
@@ -70,15 +70,15 @@ void listenForPacket() {
 void handleUdpPacket(const boost::system::error_code& error,   std::size_t bytes_transferred) {
 	//std::cout << "From "<<otherEndPoint.address() << std::endl;
 	if (!error) { // && otherEndPoint.address() != localIP) {
-		size_t id = *((size_t*)(inBuffer.data()));
+		__uint32_t id = *((__uint32_t*)(inBuffer.data()));
 		//std::cout << "Got packet"<<std::endl;
 		try {	
-			ros::serialization::IStream stream(((uint8_t*)inBuffer.data())+sizeof(size_t),bytes_transferred-sizeof(size_t));
+			ros::serialization::IStream stream(((uint8_t*)inBuffer.data())+sizeof(__uint32_t),bytes_transferred-sizeof(__uint32_t));
 			switch(id) {
-case 16596579091559891152ul: {
-flooding_test::TestMessage m16596579091559891152;
-ros::serialization::Serializer<flooding_test::TestMessage>::read(stream, m16596579091559891152);
-pub16596579091559891152.publish<flooding_test::TestMessage>(m16596579091559891152);
+case 2326394828ul: {
+flooding_test::TestMessage m2326394828;
+ros::serialization::Serializer<flooding_test::TestMessage>::read(stream, m2326394828);
+pub2326394828.publish<flooding_test::TestMessage>(m2326394828);
 break; }
 			
 				default:
@@ -102,8 +102,8 @@ int main (int argc, char *argv[])
 	
 	SystemConfig* sc = SystemConfig::getInstance();
 
-	Configuration *proxyconf = (*sc)["UdpProxy"];
-	
+	//Configuration *proxyconf = (*sc)["UdpProxy"];
+Configuration *proxyconf = (*sc)["multicast_test_bridge"];	
 	//std::string port = proxyconf->get<std::string>("UdpProxy","Port",NULL);
 	
 	std::string baddress = proxyconf->get<std::string>("UdpProxy","MulticastAddress",NULL);
@@ -136,17 +136,16 @@ int main (int argc, char *argv[])
 	listenForPacket();
 	
 	
-	 
-    ros::init(argc, argv, "udpProxy");
+ros::init(argc, argv, "multicast_test_bridge"); //   ros::init(argc, argv, "udpProxy");
 
     ros::NodeHandle n;
     ownRosName = ros::this_node::getName();//n.getNamespace();//n.resolveName("ddsProxy",true);
     
     std::cout << ownRosName << std::endl;
     
-ros::Subscriber sub0 = n.subscribe("/flooding_test/TestMessage",5, onRosTestMessage16596579091559891152,ros::TransportHints().unreliable().tcpNoDelay().reliable());
+ros::Subscriber sub0 = n.subscribe("/flooding_test/TestMessage",5, onRosTestMessage2326394828,ros::TransportHints().unreliable().tcpNoDelay().reliable());
 	
-pub16596579091559891152 = n.advertise<flooding_test::TestMessage>("/flooding_test/TestMessage",5,false);
+pub2326394828 = n.advertise<flooding_test::TestMessage>("/flooding_test/TestMessage",5,false);
 	
 	boost::thread iothread(run);
     
